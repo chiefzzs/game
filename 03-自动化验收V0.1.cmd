@@ -1,30 +1,32 @@
 @echo off
-chcp 65001 >nul
 REM ========================================================
-REM  中世纪农民起义 - V0.1 跑 3 个自动化验收测试
-REM  Config 20项 + ProgressFlags 6项 + Save 11项 = 共 37项
+REM  Medieval Rebellion V0.1 - Auto-Check 37/37
+REM  Config(20) + ProgressFlags(6) + SaveSlot(11) = 37
 REM ========================================================
-title Medieval Rebellion - V0.1 Auto-Check 37/37
+title Medieval Rebellion V0.1 - Auto-Check 37/37
 
 setlocal enabledelayedexpansion
 
 set "GODOT_EXE=D:\tools\game\Godot_v4.6.2\Godot_v4.6.2-stable_win64.exe"
 set "PROJECT_DIR=%~dp0"
+if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
+
+cd /d "%PROJECT_DIR%"
 
 if not exist "%GODOT_EXE%" (
-    echo [错误] 找不到 Godot 引擎：%GODOT_EXE%
+    echo [ERROR] Godot not found: %GODOT_EXE%
     pause
     exit /b 1
 )
-if not exist "%PROJECT_DIR%project.godot" (
-    echo [错误] 当前目录没有 project.godot。
+if not exist "%PROJECT_DIR%\project.godot" (
+    echo [ERROR] project.godot not found.
     pause
     exit /b 1
 )
 
 echo.
 echo ====================================================================
-echo  Medieval Rebellion V0.1 - 自动化验收（共 3 轮，累计 37 项）
+echo  Medieval Rebellion V0.1 - Automated acceptance (3 rounds, 37 items)
 echo ====================================================================
 echo.
 
@@ -32,52 +34,62 @@ set /a TOTAL_PASS=0
 set /a TOTAL_FAIL=0
 set /a SCENE_IDX=0
 
-for %%T in (
-    "V01_ConfigTest.tscn|C 验收 20项 Config 四层配置"
-    "V01_FlagsTest.tscn |F 验收  6项 ProgressFlags 标记+KV+序列化"
-    "V01_SaveTest.tscn  |S 验收 11项 SaveSlotManager 3槽存档"
-) do (
-    for /f "tokens=1,2 delims=|" %%a in ("%%~T") do (
-        set SCENE=%%a
-        set NAME=%%b
-        set /a SCENE_IDX+=1
+set "SCENES=V01_ConfigTest.tscn V01_FlagsTest.tscn V01_SaveTest.tscn"
+set "NAMES=[C] 20 ConfigLayers    [F] 6 ProgressFlags    [S] 11 SaveSlots"
 
-        echo --------------------------------------------------------------------
-        echo  轮 !SCENE_IDX!/3 : !NAME!
-        echo  场景  : res://scenes/test/!SCENE!
-        echo --------------------------------------------------------------------
+set i=0
+for %%s in (%SCENES%) do call :RUN_SCENE %%s
+goto :SUMMARY
 
-        set "LOG_FILE=%TEMP%\mreb_v01_!SCENE_IDX!.log"
-        del /q "!LOG_FILE!" 2>nul
+:RUN_SCENE
+set /a i+=1
+set SCENE=%1
+for /f "tokens=%i%" %%n in ("%NAMES%") do set CNAME=%%n
 
-        start "" /wait "%GODOT_EXE%" --path "%PROJECT_DIR%" --headless --quit-after 6 --scene "res://scenes/test/!SCENE!" > "!LOG_FILE!" 2>&1
+echo --------------------------------------------------------------------
+echo  Round %i%/3 :  %CNAME%
+echo  Scene  : res://scenes/test/%SCENE%
+echo --------------------------------------------------------------------
 
-        echo.
-        if exist "!LOG_FILE!" (
-            findstr /i /c:"✅" /c:"passed=" /c:"Passed " /c:"Failed " "!LOG_FILE!"
-            echo.
+set "LOG_FILE=%TEMP%\mreb_v01_r%i%.log"
+del /q "%LOG_FILE%" 2>nul
 
-            for /f "tokens=2 delims==" %%p in ('findstr /i /c:"Passed " /c:"passed=" "!LOG_FILE!"') do (
-                for /f "tokens=1 delims= " %%n in ("%%p") do set /a TOTAL_PASS+=%%n
-            )
-            for /f "tokens=3 delims==" %%p in ('findstr /i /c:"Failed " /c:"failed=" "!LOG_FILE!"') do (
-                for /f "tokens=1 delims= " %%n in ("%%p") do set /a TOTAL_FAIL+=%%n
-            )
-        ) else (
-            echo   [警告] 日志未生成，跳过本轮结果统计。
-        )
-        echo.
+"%GODOT_EXE%" --path "%PROJECT_DIR%" --headless --quit-after 8 --scene "res://scenes/test/%SCENE%" > "%LOG_FILE%" 2>&1
+
+echo.
+if exist "%LOG_FILE%" (
+    type "%LOG_FILE%" | findstr /i /r /c:"Passed" /c:"passed=" /c:"Failed " /c:"failed=" /c:"\[Config\] L2"
+    echo.
+
+    REM Extract pass count
+    for /f "tokens=2 delims==" %%a in ('type "%LOG_FILE%" ^| findstr /i /r /c:"passed="') do (
+        for /f %%n in ("%%a") do set /a TOTAL_PASS+=%%n
     )
-)
-
-echo ====================================================================
-echo   合计:  通过 = !TOTAL_PASS!   失败 = !TOTAL_FAIL!
-echo ====================================================================
-if !TOTAL_FAIL! EQU 0 (
-    echo   [PASS] V0.1 自动化验收 37/37 全部通过 🎉
+    for /f "tokens=2 delims= " %%a in ('type "%LOG_FILE%" ^| findstr /i /r /c:"Passed "') do (
+        set /a TOTAL_PASS+=%%a
+    )
+    REM Extract fail count
+    for /f "tokens=4 delims==" %%a in ('type "%LOG_FILE%" ^| findstr /i /r /c:"failed="') do (
+        for /f %%n in ("%%a") do set /a TOTAL_FAIL+=%%n
+    )
+    for /f "tokens=5" %%a in ('type "%LOG_FILE%" ^| findstr /i /r /c:"Failed "') do (
+        set /a TOTAL_FAIL+=%%a
+    )
 ) else (
-    echo   [FAIL] 有失败项，请查上面日志。
+    echo   [WARN] log file not generated this round.
+)
+echo.
+exit /b 0
+
+:SUMMARY
+echo ====================================================================
+echo   TOTAL:  PASS=%TOTAL_PASS%    FAIL=%TOTAL_FAIL%
+echo ====================================================================
+if %TOTAL_FAIL% EQU 0 (
+    echo   [PASS] V0.1 automated acceptance 37/37 all passed.
+) else (
+    echo   [FAIL] There were failed items, check above logs.
 )
 echo.
 pause
-exit /b !TOTAL_FAIL!
+exit /b %TOTAL_FAIL%
