@@ -1,0 +1,17 @@
+# Godot 4.x
+.godot/
+export_*/
+*.translation_backup
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temp / Logs
+*.tmp
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp

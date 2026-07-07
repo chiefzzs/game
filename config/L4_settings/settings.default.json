@@ -1,0 +1,31 @@
+{
+  "gameplay": {
+    "difficulty": "normal",
+    "screenShakeEnabled": true,
+    "screenShakeIntensity": 1.0,
+    "companionAiEnabled": true,
+    "autoPickupRadius": 45.0,
+    "dialogAutoNextSec": 0.0
+  },
+  "audio": {
+    "masterVolume": 1.0,
+    "bgmVolume": 0.8,
+    "sfxVolume": 0.9,
+    "dialogVolume": 1.0
+  },
+  "input": {
+    "joypadEnabled": true,
+    "joystickDeadzone": 0.2,
+    "invertYAxis": false,
+    "dashDoubleTapEnabled": true
+  },
+  "video": {
+    "fullscreen": false,
+    "vsyncEnabled": true,
+    "targetFps": 60,
+    "windowWidth": 1280,
+    "windowHeight": 720,
+    "scaleFactor": 1.0,
+    "language": "zh_CN"
+  }
+}

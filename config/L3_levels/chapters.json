@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "chapters": [
+    {
+      "id": "prologue",
+      "name": "序章：被烧毁的农场",
+      "stateLockedByDefault": false,
+      "requireFlags": [],
+      "mapOrder": ["farm_01"],
+      "nextChapter": "act_1_village"
+    },
+    {
+      "id": "act_1_village",
+      "name": "第一章：村庄集结",
+      "stateLockedByDefault": true,
+      "requireFlags": ["ch_prologue_done"],
+      "mapOrder": ["village_edge_01", "village_center"],
+      "nextChapter": "act_2_town"
+    },
+    {
+      "id": "act_2_town",
+      "name": "第二章：城镇物资",
+      "stateLockedByDefault": true,
+      "requireFlags": ["ch_act1_done"],
+      "mapOrder": ["town_gate", "town_market", "town_backalley"],
+      "nextChapter": "act_3_forest"
+    }
+  ]
+}

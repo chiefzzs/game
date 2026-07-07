@@ -1,0 +1,21 @@
+{
+  "name": "农民主角",
+  "baseHp": 100,
+  "baseAtk": 12,
+  "baseDef": 2,
+  "moveSpeed": 260.0,
+  "jumpForce": -560.0,
+  "jumpShortForceMul": 0.45,
+  "dashSpeed": 620.0,
+  "dashCooldownSec": 0.7,
+  "dashCostStamina": 20,
+  "staminaMax": 100,
+  "staminaRegenPerSec": 30,
+  "blockStaminaCost": 15,
+  "hitStopFrameOnAttack": 3,
+  "attackCombo": [
+    {"step": 0, "damageMul": 1.0, "anim": "atk1", "stunSec": 0.1},
+    {"step": 1, "damageMul": 1.15, "anim": "atk2", "stunSec": 0.12},
+    {"step": 2, "damageMul": 1.45, "anim": "atk3", "stunSec": 0.22, "knockback": 120.0}
+  ]
+}

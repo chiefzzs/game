@@ -1,0 +1,30 @@
+{
+  "collision": {
+    "layer_player": 1,
+    "layer_enemy": 2,
+    "layer_ground": 3,
+    "layer_platform_oneway": 4,
+    "layer_npc": 5,
+    "layer_pickup": 6,
+    "layer_trigger": 7,
+    "layer_hitbox": 8,
+    "layer_hurtbox": 9,
+    "mask_player_hit_enemy": [2],
+    "mask_enemy_hit_player": [1],
+    "mask_player_ground": [3, 4]
+  },
+  "physics": {
+    "gravity_scale_default": 1.8,
+    "max_fall_speed": 1200.0,
+    "coyote_time_sec": 0.08,
+    "jump_buffer_sec": 0.1,
+    "dash_iframe_sec": 0.3,
+    "block_damage_reduction": 0.9
+  },
+  "state_thresholds": {
+    "stagger_min_damage": 10,
+    "combo_window_sec": 0.55,
+    "enemy_aggro_radius": 260.0,
+    "enemy_attack_range": 55.0
+  }
+}
