@@ -147,11 +147,11 @@ func _on_area2d_body_exited(area: Area2D, body: Node) -> void:
 				_is_climbing = false
 				hud("[LADDER] exit (fell off ladder)")
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_tick += 1
 	var speed: float = float(Config.GetL2("player.moveSpeed", 260.0))
-	var jf: float = float(Config.GetL2("player.jumpForce", -560.0))
-	var gravity_scale: float = float(Config.GetL1("physics.gravity_scale_default", 1.8))
+	var jf: float = float(Config.GetL2("player.jumpForce", -720.0))
+	var gravity_scale: float = float(Config.GetL1("physics.gravity_scale_default", 1.3))
 	var max_fall: float = float(Config.GetL1("physics.max_fall_speed", 1200.0))
 	var climb_speed: float = 200.0
 	# climb activation: in ladder + vertical input
