@@ -14,14 +14,14 @@ if not exist "%GODOT_EXE%" (
     exit /b 1
 )
 
-set "PROJECT_DIR=%~dp0"
-REM Remove trailing backslash so "--path "DIR"" does not eat closing quote
-if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
-
-cd /d "%PROJECT_DIR%"
+set "CMD_DIR=%~dp0"
+if "%CMD_DIR:~-1%"=="\" set "CMD_DIR=%CMD_DIR:~0,-1%"
+pushd "%CMD_DIR%\..\.."
+set "PROJECT_DIR=%CD%"
+popd
 
 if not exist "%PROJECT_DIR%\project.godot" (
-    echo [ERROR] project.godot not found. This .cmd must run from project root.
+    echo [ERROR] project.godot not found at PROJECT_DIR=%PROJECT_DIR%
     pause
     exit /b 1
 )

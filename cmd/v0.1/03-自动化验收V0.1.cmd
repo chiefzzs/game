@@ -8,10 +8,12 @@ title Medieval Rebellion V0.1 - Auto-Check 37/37
 setlocal enabledelayedexpansion
 
 set "GODOT_EXE=D:\tools\game\Godot_v4.6.2\Godot_v4.6.2-stable_win64.exe"
-set "PROJECT_DIR=%~dp0"
-if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
 
-cd /d "%PROJECT_DIR%"
+set "CMD_DIR=%~dp0"
+if "%CMD_DIR:~-1%"=="\" set "CMD_DIR=%CMD_DIR:~0,-1%"
+pushd "%CMD_DIR%\..\.."
+set "PROJECT_DIR=%CD%"
+popd
 
 if not exist "%GODOT_EXE%" (
     echo [ERROR] Godot not found: %GODOT_EXE%
@@ -19,7 +21,7 @@ if not exist "%GODOT_EXE%" (
     exit /b 1
 )
 if not exist "%PROJECT_DIR%\project.godot" (
-    echo [ERROR] project.godot not found.
+    echo [ERROR] project.godot not found at PROJECT_DIR=%PROJECT_DIR%
     pause
     exit /b 1
 )
@@ -91,5 +93,6 @@ if %TOTAL_FAIL% EQU 0 (
     echo   [FAIL] There were failed items, check above logs.
 )
 echo.
+REM Don't pause so it can be called from automation; keep pause for interactive use
 pause
 exit /b %TOTAL_FAIL%
