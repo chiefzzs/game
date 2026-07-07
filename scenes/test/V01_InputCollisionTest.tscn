@@ -1,13 +1,28 @@
-[gd_scene load_steps=6 format=3 uid="uid://b0inputtest001"]
+[gd_scene load_steps=7 format=3 uid="uid://b0inputtest001"]
 
 [ext_resource type="Script" path="res://scenes/test/V01_InputCollisionTest.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/test/DrawPlayerSimple.gd" id="2_drawplayer"]
+[ext_resource type="Script" path="res://scenes/test/DrawGold.gd" id="3_golddraw"]
+[ext_resource type="Script" path="res://scenes/test/DrawPotion.gd" id="4_potdraw"]
+[ext_resource type="Script" path="res://scenes/test/DrawShield.gd" id="5_shielddraw"]
+
 [sub_resource type="RectangleShape2D" id="RectShape_player"]
 size = Vector2(28, 48)
+
 [sub_resource type="RectangleShape2D" id="RectShape_ground"]
 size = Vector2(1600, 40)
+
 [sub_resource type="RectangleShape2D" id="RectShape_plat"]
 size = Vector2(280, 24)
+
+[sub_resource type="CircleShape2D" id="CircShape_gold"]
+radius = 16.0
+
+[sub_resource type="CircleShape2D" id="CircShape_pot"]
+radius = 20.0
+
+[sub_resource type="RectangleShape2D" id="RectShape_ladder"]
+size = Vector2(50, 340)
 
 [node name="V01_InputCollisionTest" type="Node2D"]
 script = ExtResource("1_main")
@@ -25,6 +40,7 @@ color = Color(0.32, 0.48, 0.26, 1)
 position = Vector2(960, 900)
 collision_layer = 4
 collision_mask = 0
+
 [node name="Coll" type="CollisionShape2D" parent="World/Ground"]
 shape = SubResource("RectShape_ground")
 
@@ -39,6 +55,7 @@ color = Color(0.45, 0.34, 0.24, 1)
 position = Vector2(780, 760)
 collision_layer = 4
 collision_mask = 0
+
 [node name="Coll" type="CollisionShape2D" parent="World/Platform1"]
 shape = SubResource("RectShape_plat")
 
@@ -53,27 +70,120 @@ color = Color(0.45, 0.34, 0.24, 1)
 position = Vector2(1200, 620)
 collision_layer = 4
 collision_mask = 0
+
 [node name="Coll" type="CollisionShape2D" parent="World/Platform2"]
 shape = SubResource("RectShape_plat")
 
+[node name="LadderBg" type="ColorRect" parent="World"]
+offset_left = 390.0
+offset_top = 580.0
+offset_right = 450.0
+offset_bottom = 900.0
+color = Color(0.5, 0.4, 0.25, 1)
+
+[node name="Ladder" type="Area2D" parent="World"]
+position = Vector2(420, 740)
+collision_layer = 64
+collision_mask = 1
+role = "ladder"
+
+[node name="Coll" type="CollisionShape2D" parent="World/Ladder"]
+shape = SubResource("RectShape_ladder")
+
+[node name="Gold1" type="Area2D" parent="World"]
+position = Vector2(830, 718)
+collision_layer = 32
+collision_mask = 1
+role = "pickup"
+pickup_kind = "gold"
+
+[node name="GoldDraw" type="Node2D" parent="World/Gold1"]
+script = ExtResource("3_golddraw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Gold1"]
+shape = SubResource("CircShape_gold")
+
+[node name="Gold2" type="Area2D" parent="World"]
+position = Vector2(1250, 580)
+collision_layer = 32
+collision_mask = 1
+role = "pickup"
+pickup_kind = "gold"
+
+[node name="GoldDraw" type="Node2D" parent="World/Gold2"]
+script = ExtResource("3_golddraw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Gold2"]
+shape = SubResource("CircShape_gold")
+
+[node name="Potion1" type="Area2D" parent="World"]
+position = Vector2(260, 855)
+collision_layer = 32
+collision_mask = 1
+role = "pickup"
+pickup_kind = "potion"
+
+[node name="PotDraw" type="Node2D" parent="World/Potion1"]
+script = ExtResource("4_potdraw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Potion1"]
+shape = SubResource("CircShape_pot")
+
 [node name="Player" type="CharacterBody2D" parent="World"]
-position = Vector2(500, 800)
+position = Vector2(560, 800)
 collision_layer = 1
-collision_mask = 4
+collision_mask = 100
+monitorable = true
+
 [node name="Drawer" type="Node2D" parent="World/Player"]
 script = ExtResource("2_drawplayer")
+
+[node name="Shield" type="Node2D" parent="World/Player"]
+position = Vector2(18, 0)
+visible = false
+script = ExtResource("5_shielddraw")
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player"]
 shape = SubResource("RectShape_player")
 
 [node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Inv" type="HBoxContainer" parent="UI"]
+offset_left = 1300.0
+offset_top = 24.0
+offset_right = 1850.0
+offset_bottom = 70.0
+theme_override_constants/separation = 20
+
+[node name="GoldLabel" type="Label" parent="UI/Inv"]
+text = "🟡 Gold:"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.86, 0.25, 1)
+
+[node name="GoldVal" type="Label" parent="UI/Inv"]
+text = "0"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.96, 0.55, 1)
+
+[node name="PotLabel" type="Label" parent="UI/Inv"]
+text = "🧪 Potion:"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.45, 1, 0.6, 1)
+
+[node name="PotVal" type="Label" parent="UI/Inv"]
+text = "0"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.75, 1, 0.85, 1)
+
 [node name="VBox" type="VBoxContainer" parent="UI"]
 offset_left = 20.0
 offset_top = 20.0
-offset_right = 960.0
-offset_bottom = 500.0
+offset_right = 1240.0
+offset_bottom = 520.0
 theme_override_constants/separation = 6
+
 [node name="HudLog" type="Label" parent="UI/VBox"]
-text = "启动中..."
+text = "booting..."
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.95, 1, 0.85, 1)
 autowrap_mode = 2
