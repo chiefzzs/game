@@ -11,6 +11,7 @@ extends Node2D
 @onready var player: CharacterBody2D = $World/Player
 @onready var drawer: Node2D = $World/Player/Drawer
 @onready var shield: Node2D = $World/Player/Shield
+@onready var block_aura: Node2D = $World/Player/BlockAura
 @onready var inv_gold: Label = $UI/Inv/GoldVal
 @onready var inv_pot: Label = $UI/Inv/PotVal
 @onready var hp_bar: ProgressBar = $UI/HealthBars/HpRow/HpBar
@@ -43,6 +44,7 @@ var _stamina_recovery_cd: float = 0.0
 const STAMINA_RECOVERY_COOLDOWN: float = 0.8
 const DASH_STAMINA_COST: int = 18
 const BLOCK_STAMINA_TICK: float = 11.0
+var _aura_pulse_t: float = 0.0
 
 var _jump_buffer_timer: float = 0.0
 const JUMP_BUFFER_WINDOW: float = 0.12
@@ -185,13 +187,29 @@ func _on_block_p() -> void:
 	_is_blocking = true
 	if shield:
 		shield.visible = true
-	hud("[OK] BlockPressed (shield ON)")
+	if block_aura:
+		block_aura.visible = true
+	_update_aura_color()
+	hud("[OK] BlockPressed (shield + yellow aura ON)")
 
 func _on_block_r() -> void:
 	_is_blocking = false
 	if shield:
 		shield.visible = false
-	hud("[OK] BlockReleased (shield OFF)")
+	if block_aura:
+		block_aura.visible = false
+	hud("[OK] BlockReleased (shield + aura OFF)")
+
+func _update_aura_color() -> void:
+	if not block_aura:
+		return
+	var pct: float = clamp(float(_stamina) / max(1.0, float(_stamina_max)), 0.0, 1.0)
+	var r: float = 1.0
+	var g: float = lerp(0.2, 0.95, pct)
+	var b: float = lerp(0.0, 0.18, pct)
+	var pulse: float = 0.82 + 0.18 * sin(_aura_pulse_t * 7.0)
+	var col: Color = Color(r, g, b, 0.8 + 0.2 * pulse)
+	block_aura.modulate = col
 
 func _on_interact() -> void:
 	hud("[PICKUP] auto-pickup enabled. Walk over items to collect them")
@@ -299,18 +317,22 @@ func _physics_process(delta: float) -> void:
 			shield.position.x = 18.0 if drawer.scale.x > 0.0 else -18.0
 	# block 持续消耗体力 + 体力耗尽自动解除格挡
 	if _is_blocking:
+		_aura_pulse_t += delta
 		var cost: float = BLOCK_STAMINA_TICK * delta
 		_stamina_f_acc = clamp(_stamina_f_acc - cost, 0.0, float(_stamina_max))
 		var st_new: int = int(_stamina_f_acc)
 		if st_new != _stamina:
 			_stamina = st_new
 			_refresh_bars()
+		_update_aura_color()
 		if _stamina_f_acc <= 0.0:
 			_stamina = 0
 			_stamina_f_acc = 0.0
 			_is_blocking = false
 			if shield:
 				shield.visible = false
+			if block_aura:
+				block_aura.visible = false
 			hud("[BLOCK] out of stamina -> released")
 		_stamina_recovery_cd = STAMINA_RECOVERY_COOLDOWN
 	else:

@@ -189,6 +189,65 @@ position = Vector2(18, 0)
 visible = false
 script = ExtResource("5_shielddraw")
 
+[node name="BlockAura" type="Node2D" parent="World/Player"]
+visible = false
+
+[node name="TopLine" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = -24.0
+offset_top = -30.0
+offset_right = 24.0
+offset_bottom = -27.0
+color = Color(1, 0.95, 0.2, 0.95)
+
+[node name="BottomLine" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = -24.0
+offset_top = 27.0
+offset_right = 24.0
+offset_bottom = 30.0
+color = Color(1, 0.95, 0.2, 0.95)
+
+[node name="LeftLine" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = -24.0
+offset_top = -30.0
+offset_right = -21.0
+offset_bottom = 30.0
+color = Color(1, 0.95, 0.2, 0.95)
+
+[node name="RightLine" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = 21.0
+offset_top = -30.0
+offset_right = 24.0
+offset_bottom = 30.0
+color = Color(1, 0.95, 0.2, 0.95)
+
+[node name="CornerTL" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = -27.0
+offset_top = -34.0
+offset_right = -21.0
+offset_bottom = -28.0
+color = Color(1, 1, 0.45, 1)
+
+[node name="CornerTR" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = 21.0
+offset_top = -34.0
+offset_right = 27.0
+offset_bottom = -28.0
+color = Color(1, 1, 0.45, 1)
+
+[node name="CornerBL" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = -27.0
+offset_top = 28.0
+offset_right = -21.0
+offset_bottom = 34.0
+color = Color(1, 1, 0.45, 1)
+
+[node name="CornerBR" type="ColorRect" parent="World/Player/BlockAura"]
+offset_left = 21.0
+offset_top = 28.0
+offset_right = 27.0
+offset_bottom = 34.0
+color = Color(1, 1, 0.45, 1)
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player"]
 shape = SubResource("RectShape_player")
 

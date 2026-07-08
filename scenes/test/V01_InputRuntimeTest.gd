@@ -1,5 +1,5 @@
 extends Node2D
-## Headless runtime test for V01_InputCollisionTest (40 assertions)
+## Headless runtime test for V01_InputCollisionTest (44 assertions)
 var passed: int = 0
 var failed: int = 0
 var _test_scene: Node2D
@@ -7,6 +7,8 @@ var _hud: Label
 var _player: CharacterBody2D
 var _drawer: Node2D
 var _shield: Node2D
+var _block_aura: Node2D
+var _aura_top: ColorRect
 var _inv_gold: Label
 var _inv_pot: Label
 var _hp_bar: ProgressBar
@@ -34,6 +36,8 @@ func _phase1_nodes() -> void:
 	_player = _test_scene.get_node_or_null("World/Player") as CharacterBody2D
 	_drawer = _test_scene.get_node_or_null("World/Player/Drawer") as Node2D
 	_shield = _test_scene.get_node_or_null("World/Player/Shield") as Node2D
+	_block_aura = _test_scene.get_node_or_null("World/Player/BlockAura") as Node2D
+	_aura_top = _test_scene.get_node_or_null("World/Player/BlockAura/TopLine") as ColorRect
 	_inv_gold = _test_scene.get_node_or_null("UI/Inv/GoldVal") as Label
 	_inv_pot  = _test_scene.get_node_or_null("UI/Inv/PotVal")  as Label
 	_hp_bar = _test_scene.get_node_or_null("UI/HealthBars/HpRow/HpBar") as ProgressBar
@@ -47,6 +51,8 @@ func _phase1_nodes() -> void:
 	_expect(_player != null, "Player present", "Player missing")
 	_expect(_drawer != null, "Drawer present", "Drawer missing")
 	_expect(_shield != null, "Shield child Node2D present (DrawShield)", "Shield missing (block visual absent)")
+	_expect(_block_aura != null and _aura_top != null, "BlockAura present (4 yellow lines + 4 corners)", "BlockAura (yellow frame) missing")
+	_expect(not _block_aura.visible, "BlockAura starts hidden (visible=false)", "Aura already visible before block pressed!")
 	_expect(_inv_gold != null and _inv_pot != null, "Inventory HUD labels present Gold/Pot", "Inventory HUD missing")
 	_expect(_hp_bar != null and _hp_txt != null and _st_bar != null and _st_txt != null, "HealthBars UI present (❤ HP + ⚡ SP rows)", "HP/SP bars missing from UI")
 	_expect(_gold1 != null and _pot1 != null and _ladder != null, "Pickups (2x gold + 1x pot) + Ladder present", "Scene missing gold/pot/ladder")
@@ -89,21 +95,41 @@ func _phase3_dash_block() -> void:
 	var d_timer: float = float(_test_scene.get("_dash_timer") if "_dash_timer" in _test_scene else -1)
 	_expect(cd_val > 0.2 and cd_val < 1.0, "Dash cooldown set to %.2fs (expected 0.65ish)" % cd_val, "Dash CD missing, cd=%.2f" % cd_val)
 	_expect(_dash_seen >= 1, "DashPressed signal fired %d times" % _dash_seen, "DashPressed NOT fired (dash not working)")
-	_expect(_shield != null and _shield.visible, "Shield visible=true while blocking (signal-only flag, not overridden by process)", "Shield not shown on block: vis=%s" % [str(_shield.visible if _shield else "noNode")])
+	_expect(_shield != null and _shield.visible, "Shield visible=true while blocking", "Shield not shown on block: vis=%s" % [str(_shield.visible if _shield else "noNode")])
 	_expect(_blk_seen >= 1, "BlockPressed signal fired %d times" % _blk_seen, "BlockPressed NOT fired")
+	_expect(_block_aura != null and _block_aura.visible, "BlockAura (yellow frame) visible=true while blocking", "Aura not shown on block: vis=%s" % [str(_block_aura.visible if _block_aura else "noNode")])
+	_expect(_aura_top != null and _aura_top.color.r > 0.9 and _aura_top.color.g > 0.8 and _aura_top.color.b < 0.4, "BlockAura lines yellow (R%.2f G%.2f B%.2f)" % [_aura_top.color.r, _aura_top.color.g, _aura_top.color.b], "Aura lines not yellow, expected bright yellow")
 	# Stamina after Dash(-18) + Block 0.2s(-10*0.2=-2) => ~80
 	var st_after_dash: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
 	_expect(st_after_dash >= 70 and st_after_dash <= 88, "Dash + 0.2s Block cost SP (now=%d, expect 70~88)" % st_after_dash, "Stamina cost mismatch: dash=-18 block/sec=-10 got %d" % st_after_dash)
 	_expect(_st_bar and _st_txt and _st_txt.text == "%d/100" % st_after_dash, "SP UI updated after Dash+Block (txt=%s)" % (_st_txt.text if _st_txt else "null"), "SP UI not refreshed")
-	# Release block -> shield hide, wait for stamina recovery
+	# Keep blocking another 0.5s -> SP should continue dropping by ~5.5
+	_sched(0.5, func():
+		_phase3a_continuous_block_drop(st_after_dash)
+	)
+
+func _phase3a_continuous_block_drop(st_before: int) -> void:
+	var st_drop: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
+	var expected_min: int = st_before - 8
+	var expected_max: int = st_before - 2
+	var st_pct: float = float(st_drop) / float(max(1, int(_test_scene.get("_stamina_max"))))
+	var aura_mod_g: float = _block_aura.modulate.g if _block_aura else 0.0
+	var aura_mod_r: float = _block_aura.modulate.r if _block_aura else 0.0
+	_expect(st_drop >= expected_min and st_drop <= expected_max, "Block 0.5s => SP drops (was=%d now=%d, expect %d~%d)" % [st_before, st_drop, expected_min, expected_max], "Continuous block not draining SP: remain=%d no change!" % st_drop)
+	_expect(_block_aura != null and _block_aura.visible, "Aura still visible while still blocking", "Aura disappeared mid-block!")
+	# After 0.7s total block: st_pct ~ (100-18-7.7)/100 = 0.743 => g=lerp(0.2, 0.95, 0.74) ~0.755, expect r=1, g<0.92
+	_expect(abs(aura_mod_r - 1.0) < 0.1, "Aura modulate.r=%.2f ~1.0 (R channel always 1)" % aura_mod_r, "Aura color wrong: R=%.2f" % aura_mod_r)
+	_expect(aura_mod_g < 0.94 and aura_mod_g > 0.3, "Aura modulate.g=%.2f darkens as SP drops (st_pct=%.2f)" % [aura_mod_g, st_pct], "Aura color not tracking SP level (g=%.2f)" % aura_mod_g)
+	# Release block -> shield hide + aura hide, wait for stamina recovery
 	InputBus.BlockReleased.emit()
 	_sched(1.4, _phase3b_block_released_and_recover)
 
 func _phase3b_block_released_and_recover() -> void:
 	_expect(_shield != null and not _shield.visible, "Shield hidden after BlockReleased", "Shield still visible after release")
+	_expect(_block_aura != null and not _block_aura.visible, "BlockAura hidden after BlockReleased", "Aura still shown after block released!")
 	var st_rec: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
-	# Recovery cooldown 0.8s + 0.6s recover * 14/s = +8.4 => at least 87
-	_expect(st_rec >= 87, "SP recovered after 1.4s rest: now=%d (expect >=87)" % st_rec, "Stamina recovery broken, still %d after rest" % st_rec)
+	# Recovery cooldown 0.8s + 0.6s recover * 14/s = +8.4 => at least 85 (was lower because kept blocking extra 0.5s)
+	_expect(st_rec >= 82, "SP recovered after 1.4s rest: now=%d (expect >=82)" % st_rec, "Stamina recovery broken, still %d after rest" % st_rec)
 	# Damage/Heal & clamp tests via call
 	if _test_scene and _test_scene.has_method("damage"):
 		_test_scene.call("damage", 150)
