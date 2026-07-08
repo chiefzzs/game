@@ -64,23 +64,22 @@ var _is_jumping: bool = false
 const JUMP_CUT_MULTIPLIER: float = 0.45
 
 func _ready() -> void:
+	if not player.is_in_group("player"):
+		player.add_to_group("player")
 	InputBus.JumpPressed.connect(_on_jump)
 	InputBus.AttackPressed.connect(_on_attack)
 	InputBus.DashPressed.connect(_on_dash)
 	InputBus.BlockPressed.connect(_on_block_p)
 	InputBus.BlockReleased.connect(_on_block_r)
 	InputBus.InteractPressed.connect(_on_interact)
-	# connect all Area2D nodes (Pickups/Ladder) body_entered/exited -> our callbacks (player is the body entering Area)
 	for child in $World.get_children():
 		if child is Area2D:
 			var area: Area2D = child
 			area.body_entered.connect(func(b: Node): _on_area2d_body_entered(area, b))
 			area.body_exited.connect(func(b: Node): _on_area2d_body_exited(area, b))
-		# Hook enemy scarecrows (CharacterBody2D) — died signals, etc.
 		if child is CharacterBody2D and child != player and child.has_method("take_damage"):
 			if child.has_signal("died"):
 				child.died.connect(func (): _on_enemy_died(child))
-	# attack hitbox (rake swing) collides with enemies (Layer 2 Enemy)
 	if attack_hitbox:
 		attack_hitbox.monitoring = false
 		attack_hitbox.monitorable = false

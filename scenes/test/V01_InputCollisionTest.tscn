@@ -202,7 +202,7 @@ script = ExtResource("6_rakedraw")
 shape = SubResource("CircShape_rake")
 
 [node name="Scarecrow1" type="CharacterBody2D" parent="World"]
-position = Vector2(1100, 700)
+position = Vector2(1100, 658)
 script = ExtResource("7_scarecrow_ai")
 
 [node name="Drawer" type="Node2D" parent="World/Scarecrow1"]
@@ -212,7 +212,7 @@ script = ExtResource("9_enemy_rect")
 shape = SubResource("RectShape_skr")
 
 [node name="Scarecrow2" type="CharacterBody2D" parent="World"]
-position = Vector2(1520, 770)
+position = Vector2(1520, 850)
 script = ExtResource("7_scarecrow_ai")
 
 [node name="Drawer" type="Node2D" parent="World/Scarecrow2"]

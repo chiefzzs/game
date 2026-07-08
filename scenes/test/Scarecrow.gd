@@ -110,16 +110,16 @@ func _physics_process(delta: float) -> void:
 	var target_pos: Vector2 = global_position
 	var dist_x: float = 9999.0
 	var dist: float = 9999.0
-	var player_alive := _player_node and is_instance_valid(_player_node)
+	var player_alive: bool = (_player_node != null) and is_instance_valid(_player_node)
 	if player_alive:
 		target_pos = _player_node.global_position
 		dist_x = target_pos.x - global_position.x
 		dist = global_position.distance_to(target_pos)
 	var now_ms: int = Time.get_ticks_msec()
-	var forced_chase := now_ms < _forced_chase_until
-	var in_attack_range := player_alive and dist < ATTACK_DIST and abs(target_pos.y - global_position.y) < 28.0
-	var in_chase_range := (player_alive and dist < CHASE_DIST) or forced_chase
-	var prev_state := _state
+	var forced_chase: bool = now_ms < _forced_chase_until
+	var in_attack_range: bool = player_alive and (dist < ATTACK_DIST) and (abs(target_pos.y - global_position.y) < 28.0)
+	var in_chase_range: bool = (player_alive and (dist < CHASE_DIST)) or forced_chase
+	var prev_state: String = _state
 	if in_attack_range:
 		_state = "attack"
 	elif in_chase_range:
@@ -156,16 +156,20 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_x
 	velocity.y += 1200.0 * delta
 	velocity.y = min(velocity.y, 950.0)
-	if is_on_floor():
-		velocity.x = move_toward(velocity.x, move_x, 800.0 * delta)
-	else:
-		velocity.x = move_toward(velocity.x, move_x, 200.0 * delta)
 	if _drawer:
 		var s: float = sign(_face_dir)
 		if abs(s) < 0.001:
 			s = 1.0
 		_drawer.scale.x = s
 	move_and_slide()
+	if Engine.is_editor_hint():
+		return
+	if false:
+		var tag := "SKR1" if global_position.x < 1300.0 else "SKR2"
+		print_debug("[%s] x=%.1f y=%.1f st=%s onF=%s vx=%.1f vy=%.1f alive=%s dist=%.0f" % [
+			tag, global_position.x, global_position.y, _state,
+			str(is_on_floor()), velocity.x, velocity.y,
+			str(player_alive), dist])
 
 func _trigger_sight_alert(target_pos: Vector2) -> void:
 	if not _alerted_by_sight:
