@@ -12,9 +12,9 @@ const _CB_SCRIPT := preload("res://scripts/editor/CharacterBase.gd")
 @onready var btn_back: Button = $Vb/BottomHb/BtnBack
 @onready var btn_reset: Button = $Vb/BottomHb/BtnReset
 @onready var rtl_log: RichTextLabel = $Vb/LogMargin/LogVb/RichLog
-@onready var player_spawn: Node2D = $WorldRoot/PlayerSpawn
-@onready var dummy_spawn: Node2D = $WorldRoot/DummySpawn
-@onready var ground_static: StaticBody2D = $WorldRoot/Ground
+@onready var player_spawn: Node2D = $Vb/WorldRoot/PlayerSpawn
+@onready var dummy_spawn: Node2D = $Vb/WorldRoot/DummySpawn
+@onready var ground_static: StaticBody2D = $Vb/WorldRoot/Ground
 
 var _player: CharacterBody2D = null
 var _dummy: CharacterBody2D = null

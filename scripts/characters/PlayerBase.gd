@@ -1,6 +1,5 @@
 extends "res://scripts/editor/CharacterBase.gd"
 
-const _CE := preload("res://scripts/config/CharacterEnums.gd")
 const _CDC := preload("res://scripts/combat/CombatDamageCalculator.gd")
 
 var jump_count: int = 0

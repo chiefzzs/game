@@ -61,6 +61,13 @@ var is_dead: bool = false
 var facing: float = 1.0  # 1.0 朝右, -1.0 朝左（与 drawer.scale.x 对齐语义）
 var is_invulnerable: bool = false
 var invulnerable_timer: float = 0.0
+## V0.3d 别名：外部统一使用 is_invincible / invincible_timer（双写同步旧 V0.2 名）
+var is_invincible: bool = false:
+	get: return is_invulnerable
+	set(v): is_invulnerable = v
+var invincible_timer: float = 0.0:
+	get: return invulnerable_timer
+	set(v): invulnerable_timer = v
 var last_damage_source: Node = null
 var last_damage_ts: int = 0
 
