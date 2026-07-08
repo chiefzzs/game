@@ -29,6 +29,13 @@ var _nearby_pickups: Array[Node] = []
 var _is_climbing: bool = false
 var _in_ladder_area: bool = false
 
+var _jump_buffer_timer: float = 0.0
+const JUMP_BUFFER_WINDOW: float = 0.12
+var _coyote_timer: float = 0.0
+const COYOTE_WINDOW: float = 0.10
+var _is_jumping: bool = false
+const JUMP_CUT_MULTIPLIER: float = 0.45
+
 func _ready() -> void:
 	InputBus.JumpPressed.connect(_on_jump)
 	InputBus.AttackPressed.connect(func(): hud("[OK] AttackPressed (X/J)"))
@@ -69,10 +76,12 @@ func _refresh_inventory() -> void:
 		inv_pot.text = str(_inventory_pot)
 
 func _on_jump() -> void:
-	hud("[OK] JumpPressed")
+	_jump_buffer_timer = JUMP_BUFFER_WINDOW
 	if _is_climbing:
 		_is_climbing = false
 		hud("[LADDER] jump -> off ladder")
+	else:
+		hud("[OK] JumpPressed (buffered %.0fms)" % [JUMP_BUFFER_WINDOW * 1000.0])
 
 func _on_dash() -> void:
 	if _dash_cd > 0.0 or _dash_timer > 0.0:
@@ -165,11 +174,22 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, InputBus.moveAxis * speed * 0.45, 900.0 * delta)
 	else:
 		_is_climbing = false
+		_jump_buffer_timer = max(0.0, _jump_buffer_timer - delta)
+		if player.is_on_floor():
+			_coyote_timer = COYOTE_WINDOW
+		else:
+			_coyote_timer = max(0.0, _coyote_timer - delta)
 		velocity.x = move_toward(velocity.x, InputBus.moveAxis * speed, 1200.0 * delta)
 		velocity.y += 980.0 * gravity_scale * delta
 		velocity.y = min(velocity.y, max_fall)
-		if InputBus.IsJumpHeld() and player.is_on_floor():
+		if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
 			velocity.y = jf
+			_jump_buffer_timer = 0.0
+			_coyote_timer = 0.0
+			_is_jumping = true
+		if _is_jumping and velocity.y < 0.0 and not InputBus.IsJumpHeld():
+			velocity.y *= JUMP_CUT_MULTIPLIER
+			_is_jumping = false
 	# dash timer
 	if _dash_timer > 0.0:
 		_dash_timer = max(0.0, _dash_timer - delta)
@@ -181,6 +201,8 @@ func _physics_process(delta: float) -> void:
 	player.velocity = velocity
 	player.move_and_slide()
 	velocity = player.velocity
+	if velocity.y >= 0.0:
+		_is_jumping = false
 	if abs(InputBus.moveAxis) > 0.01 and drawer:
 		drawer.scale.x = -1.0 if InputBus.moveAxis < 0.0 else 1.0
 		if shield:
