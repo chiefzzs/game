@@ -149,7 +149,7 @@ func _DummyAttackPlayer() -> void:
 		dmg = max(1, int(dmg * 0.3))
 		opts.hitstun = 0.06
 	var real: int = _player.take_damage(dmg, _dummy, opts)
-	_AddLine("   🎯 稻草人反击→玩家 [color=#FFEB3B]-%d[/color] HP（BLOCK减伤=70%）" % real)
+	_AddLine("   🎯 稻草人反击→玩家 [color=#FFEB3B]-%d[/color] HP（BLOCK减伤=70%%）" % real)
 
 func _OnPlayerHp(_o: int, n: int, mx: int) -> void:
 	if hp_bar != null and lbl_hp != null:
