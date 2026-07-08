@@ -13,6 +13,10 @@ extends Node2D
 @onready var shield: Node2D = $World/Player/Shield
 @onready var inv_gold: Label = $UI/Inv/GoldVal
 @onready var inv_pot: Label = $UI/Inv/PotVal
+@onready var hp_bar: ProgressBar = $UI/HealthBars/HpRow/HpBar
+@onready var hp_txt: Label = $UI/HealthBars/HpRow/HpText
+@onready var st_bar: ProgressBar = $UI/HealthBars/StRow/StBar
+@onready var st_txt: Label = $UI/HealthBars/StRow/StText
 var lines: Array[String] = ["Move:A/D | Jump:Space | Dash:K/Y | Block:Shift/LT | Pickup:E/B | Climb:W/S on ladder | Esc back"]
 var velocity: Vector2 = Vector2.ZERO
 var _tick: int = 0
@@ -28,6 +32,17 @@ var _inventory_pot: int = 0
 var _nearby_pickups: Array[Node] = []
 var _is_climbing: bool = false
 var _in_ladder_area: bool = false
+
+var _hp_max: int = 100
+var _hp: int = 100
+var _stamina_max: int = 100
+var _stamina: int = 100
+var _stamina_f_acc: float = 100.0
+var _stamina_recovery_rate: float = 14.0
+var _stamina_recovery_cd: float = 0.0
+const STAMINA_RECOVERY_COOLDOWN: float = 0.8
+const DASH_STAMINA_COST: int = 18
+const BLOCK_STAMINA_TICK: float = 11.0
 
 var _jump_buffer_timer: float = 0.0
 const JUMP_BUFFER_WINDOW: float = 0.12
@@ -52,6 +67,7 @@ func _ready() -> void:
 	hud("[OK] Scene ready. onFloor=%s" % player.is_on_floor())
 	hud("[INFO] Gold=0 Potion=0 Nearby=0 Climb=false DashCD=0.0")
 	_refresh_inventory()
+	_refresh_bars()
 	_flush()
 
 func hud(msg: String) -> void:
@@ -59,6 +75,67 @@ func hud(msg: String) -> void:
 	while lines.size() > 11:
 		lines.pop_front()
 	_flush()
+
+func set_hp(value: int) -> void:
+	var old: int = _hp
+	_hp = clamp(value, 0, _hp_max)
+	if _hp != old:
+		_refresh_bars()
+
+func damage(amount: int) -> void:
+	if amount <= 0:
+		return
+	var old: int = _hp
+	set_hp(_hp - amount)
+	hud("[DAMAGE] -%d HP  (%d -> %d)" % [amount, old, _hp])
+
+func heal(amount: int) -> void:
+	if amount <= 0:
+		return
+	var old: int = _hp
+	set_hp(_hp + amount)
+	if _hp > old:
+		hud("[HEAL] +%d HP  (%d -> %d)" % [_hp - old, old, _hp])
+
+func set_stamina(value: int) -> void:
+	var old: int = _stamina
+	_stamina = clamp(value, 0, _stamina_max)
+	_stamina_f_acc = float(_stamina)
+	if _stamina != old:
+		_refresh_bars()
+
+func spend_stamina(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if _stamina < amount:
+		return false
+	_stamina -= amount
+	_stamina_f_acc = float(_stamina)
+	_stamina_recovery_cd = STAMINA_RECOVERY_COOLDOWN
+	_refresh_bars()
+	return true
+
+func recover_stamina(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var old: int = _stamina
+	_stamina_f_acc = clamp(_stamina_f_acc + amount, 0.0, float(_stamina_max))
+	var next: int = int(_stamina_f_acc)
+	_stamina = clamp(next, 0, _stamina_max)
+	if _stamina != old:
+		_refresh_bars()
+
+func _refresh_bars() -> void:
+	if hp_bar:
+		hp_bar.max_value = float(_hp_max)
+		hp_bar.value = float(_hp)
+	if hp_txt:
+		hp_txt.text = "%d/%d" % [_hp, _hp_max]
+	if st_bar:
+		st_bar.max_value = float(_stamina_max)
+		st_bar.value = float(_stamina)
+	if st_txt:
+		st_txt.text = "%d/%d" % [_stamina, _stamina_max]
 
 func _flush() -> void:
 	if not lbl:
@@ -90,15 +167,21 @@ func _on_dash() -> void:
 	if _dash_cd > 0.0 or _dash_timer > 0.0:
 		hud("[DASH] skipped (on cd %.1fs)" % _dash_cd)
 		return
+	if not spend_stamina(DASH_STAMINA_COST):
+		hud("[DASH] skipped (need %d SP, have %d)" % [DASH_STAMINA_COST, _stamina])
+		return
 	var dir: float = InputBus.moveAxis
 	if abs(dir) < 0.05:
 		dir = -1.0 if drawer and drawer.scale.x < 0.0 else 1.0
 	_dash_dir = dir
 	_dash_timer = _dash_dur
 	_dash_cd = 0.65
-	hud("[DASH] fire dir=%.1f" % _dash_dir)
+	hud("[DASH] fire dir=%.1f  (-%d SP, remain=%d)" % [_dash_dir, DASH_STAMINA_COST, _stamina])
 
 func _on_block_p() -> void:
+	if _stamina <= 0:
+		hud("[BLOCK] skipped (no stamina)")
+		return
 	_is_blocking = true
 	if shield:
 		shield.visible = true
@@ -214,6 +297,27 @@ func _physics_process(delta: float) -> void:
 		drawer.scale.x = -1.0 if InputBus.moveAxis < 0.0 else 1.0
 		if shield:
 			shield.position.x = 18.0 if drawer.scale.x > 0.0 else -18.0
+	# block 持续消耗体力 + 体力耗尽自动解除格挡
+	if _is_blocking:
+		var cost: float = BLOCK_STAMINA_TICK * delta
+		_stamina_f_acc = clamp(_stamina_f_acc - cost, 0.0, float(_stamina_max))
+		var st_new: int = int(_stamina_f_acc)
+		if st_new != _stamina:
+			_stamina = st_new
+			_refresh_bars()
+		if _stamina_f_acc <= 0.0:
+			_stamina = 0
+			_stamina_f_acc = 0.0
+			_is_blocking = false
+			if shield:
+				shield.visible = false
+			hud("[BLOCK] out of stamina -> released")
+		_stamina_recovery_cd = STAMINA_RECOVERY_COOLDOWN
+	else:
+		if _stamina_recovery_cd > 0.0:
+			_stamina_recovery_cd = max(0.0, _stamina_recovery_cd - delta)
+		elif _stamina < _stamina_max:
+			recover_stamina(_stamina_recovery_rate * delta)
 	_flush()
 
 func _unhandled_input(e: InputEvent) -> void:

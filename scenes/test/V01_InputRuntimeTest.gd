@@ -1,5 +1,5 @@
 extends Node2D
-## Headless runtime test for V01_InputCollisionTest (30 assertions)
+## Headless runtime test for V01_InputCollisionTest (40 assertions)
 var passed: int = 0
 var failed: int = 0
 var _test_scene: Node2D
@@ -9,6 +9,10 @@ var _drawer: Node2D
 var _shield: Node2D
 var _inv_gold: Label
 var _inv_pot: Label
+var _hp_bar: ProgressBar
+var _hp_txt: Label
+var _st_bar: ProgressBar
+var _st_txt: Label
 var _jump_seen: int = 0
 var _atk_seen: int = 0
 var _blk_seen: int = 0
@@ -32,6 +36,10 @@ func _phase1_nodes() -> void:
 	_shield = _test_scene.get_node_or_null("World/Player/Shield") as Node2D
 	_inv_gold = _test_scene.get_node_or_null("UI/Inv/GoldVal") as Label
 	_inv_pot  = _test_scene.get_node_or_null("UI/Inv/PotVal")  as Label
+	_hp_bar = _test_scene.get_node_or_null("UI/HealthBars/HpRow/HpBar") as ProgressBar
+	_hp_txt = _test_scene.get_node_or_null("UI/HealthBars/HpRow/HpText") as Label
+	_st_bar = _test_scene.get_node_or_null("UI/HealthBars/StRow/StBar") as ProgressBar
+	_st_txt = _test_scene.get_node_or_null("UI/HealthBars/StRow/StText") as Label
 	_gold1 = _test_scene.get_node_or_null("World/Gold1")
 	_pot1  = _test_scene.get_node_or_null("World/Potion1")
 	_ladder = _test_scene.get_node_or_null("World/Ladder")
@@ -40,8 +48,8 @@ func _phase1_nodes() -> void:
 	_expect(_drawer != null, "Drawer present", "Drawer missing")
 	_expect(_shield != null, "Shield child Node2D present (DrawShield)", "Shield missing (block visual absent)")
 	_expect(_inv_gold != null and _inv_pot != null, "Inventory HUD labels present Gold/Pot", "Inventory HUD missing")
+	_expect(_hp_bar != null and _hp_txt != null and _st_bar != null and _st_txt != null, "HealthBars UI present (❤ HP + ⚡ SP rows)", "HP/SP bars missing from UI")
 	_expect(_gold1 != null and _pot1 != null and _ladder != null, "Pickups (2x gold + 1x pot) + Ladder present", "Scene missing gold/pot/ladder")
-	# Connect InputBus signals BEFORE emitting them in phase 3
 	InputBus.JumpPressed.connect(_on_j)
 	InputBus.AttackPressed.connect(_on_a)
 	InputBus.BlockPressed.connect(_on_b)
@@ -59,6 +67,15 @@ func _phase2_ready_flush() -> void:
 		_pass("Initial inventory Gold=0 Pot=0")
 	else:
 		_fail("Inventory initial state wrong: G=%s P=%s" % [_inv_gold.text if _inv_gold else "null", _inv_pot.text if _inv_pot else "null"])
+	# Initial HP/Stamina
+	var hp: int = int(_test_scene.get("_hp") if "_hp" in _test_scene else -1)
+	var hp_max: int = int(_test_scene.get("_hp_max") if "_hp_max" in _test_scene else -1)
+	var st: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
+	var st_max: int = int(_test_scene.get("_stamina_max") if "_stamina_max" in _test_scene else -1)
+	_expect(hp == 100 and hp_max == 100, "Initial HP full (%d/%d)" % [hp, hp_max], "HP init wrong: %d/%d" % [hp, hp_max])
+	_expect(st == 100 and st_max == 100, "Initial SP full (%d/%d)" % [st, st_max], "SP init wrong: %d/%d" % [st, st_max])
+	_expect(_hp_bar and abs(_hp_bar.value - 100.0) < 0.01 and _hp_txt and _hp_txt.text == "100/100", "HP UI synced (value=100, txt=100/100)", "HP UI wrong: bar=%s txt=%s" % [str(_hp_bar.value if _hp_bar else "null"), _hp_txt.text if _hp_txt else "null"])
+	_expect(_st_bar and abs(_st_bar.value - 100.0) < 0.01 and _st_txt and _st_txt.text == "100/100", "SP UI synced (value=100, txt=100/100)", "SP UI wrong: bar=%s txt=%s" % [str(_st_bar.value if _st_bar else "null"), _st_txt.text if _st_txt else "null"])
 	# Phase 3 fires: Dash + Block
 	_sched(0.15, func():
 		InputBus.DashPressed.emit()
@@ -74,12 +91,32 @@ func _phase3_dash_block() -> void:
 	_expect(_dash_seen >= 1, "DashPressed signal fired %d times" % _dash_seen, "DashPressed NOT fired (dash not working)")
 	_expect(_shield != null and _shield.visible, "Shield visible=true while blocking (signal-only flag, not overridden by process)", "Shield not shown on block: vis=%s" % [str(_shield.visible if _shield else "noNode")])
 	_expect(_blk_seen >= 1, "BlockPressed signal fired %d times" % _blk_seen, "BlockPressed NOT fired")
-	# Release block -> shield hide
+	# Stamina after Dash(-18) + Block 0.2s(-10*0.2=-2) => ~80
+	var st_after_dash: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
+	_expect(st_after_dash >= 70 and st_after_dash <= 88, "Dash + 0.2s Block cost SP (now=%d, expect 70~88)" % st_after_dash, "Stamina cost mismatch: dash=-18 block/sec=-10 got %d" % st_after_dash)
+	_expect(_st_bar and _st_txt and _st_txt.text == "%d/100" % st_after_dash, "SP UI updated after Dash+Block (txt=%s)" % (_st_txt.text if _st_txt else "null"), "SP UI not refreshed")
+	# Release block -> shield hide, wait for stamina recovery
 	InputBus.BlockReleased.emit()
-	_sched(0.15, _phase3b_block_released)
+	_sched(1.4, _phase3b_block_released_and_recover)
 
-func _phase3b_block_released() -> void:
+func _phase3b_block_released_and_recover() -> void:
 	_expect(_shield != null and not _shield.visible, "Shield hidden after BlockReleased", "Shield still visible after release")
+	var st_rec: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
+	# Recovery cooldown 0.8s + 0.6s recover * 14/s = +8.4 => at least 87
+	_expect(st_rec >= 87, "SP recovered after 1.4s rest: now=%d (expect >=87)" % st_rec, "Stamina recovery broken, still %d after rest" % st_rec)
+	# Damage/Heal & clamp tests via call
+	if _test_scene and _test_scene.has_method("damage"):
+		_test_scene.call("damage", 150)
+	var hp_dmg: int = int(_test_scene.get("_hp") if "_hp" in _test_scene else -1)
+	_expect(hp_dmg == 0, "damage(150) clamped HP=%d to floor 0" % hp_dmg, "HP lower clamp broken =%d" % hp_dmg)
+	if _test_scene and _test_scene.has_method("heal"):
+		_test_scene.call("heal", 9999)
+	var hp_heal: int = int(_test_scene.get("_hp") if "_hp" in _test_scene else -1)
+	_expect(hp_heal == 100, "heal(9999) clamped HP=%d to cap 100" % hp_heal, "HP upper clamp broken =%d" % hp_heal)
+	if _test_scene and _test_scene.has_method("damage"):
+		_test_scene.call("damage", 23)
+	var hp2: int = int(_test_scene.get("_hp") if "_hp" in _test_scene else -1)
+	_expect(hp2 == 77 and _hp_txt and _hp_txt.text == "77/100", "damage(23)=77, UI txt=%s" % (_hp_txt.text if _hp_txt else "null"), "HP damage UI out of sync: hp=%s bar=%s" % [str(hp2), _hp_txt.text if _hp_txt else "null"])
 	# Phase 4: teleport player onto gold pickup + directly append gold1 into nearby list (bypass signal)
 	if _gold1:
 		_player.position = _gold1.position
