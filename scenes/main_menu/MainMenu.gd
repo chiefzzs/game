@@ -10,6 +10,7 @@ extends Control
 @onready var btn_tsave: Button = $VBoxContainer/HSep2/BtnTSave
 @onready var btn_tinput: Button = $VBoxContainer/HSep2/BtnTInput
 @onready var btn_tdamage: Button = $VBoxContainer/HSep2/BtnTDamage
+@onready var btn_fsmdemo: Button = $VBoxContainer/HSep2/BtnFsmDemo
 @onready var btn_quit: Button = $VBoxContainer/BtnQuit
 @onready var lbl_log: Label = $VBoxContainer/LblLog
 
@@ -36,8 +37,12 @@ func _ready() -> void:
 		AppendLog("🔥 V0.3b 伤害演示：7 步流水线 + 颜色浮动文字模拟（6按钮看典型结果）")
 		AppendLog("   手册附录：如何操作 → 每个按钮对应 UC01~UC08 验收用例")
 		get_tree().change_scene_to_file("res://scenes/test/V03b_DamageDemo.tscn"))
+	btn_fsmdemo.pressed.connect(func():
+		AppendLog("⚔ V0.3c FSM 演示：CharacterBase 8状态骨架 + take_damage接入CDC（稻草人HP条/状态切换）")
+		AppendLog("   操作步骤：手册附录B — 3步看出IDLE↔HURT↔DEAD 状态变化 + 橙按钮=暴击黄字")
+		get_tree().change_scene_to_file("res://scenes/test/V03c_FsmDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
-	AppendLog("> 进入主菜单（V0.1），请点击按钮测试~")
+	AppendLog("> 进入主菜单（V0.3c），测试区 6 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c)~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")
 	InputBus.PausePressed.connect(func(): AppendLog("⏸ InputBus.PausePressed 信号触发（Esc/Start）"))
 
