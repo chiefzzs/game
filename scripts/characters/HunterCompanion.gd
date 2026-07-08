@@ -1,10 +1,10 @@
-extends CompanionBase
+extends "res://scripts/characters/CompanionBase.gd"
 ## V0.3 HunterCompanion.gd — 猎户：短弓远程，射速快
 
 func _ready() -> void:
 	super._ready()
 	id_key = "hunter"
-	var cfg := ConfigManager.cfg_get("companions.hunter", {}) if ConfigManager else {}
+	var cfg: Dictionary = ConfigManager.cfg_get("companions.hunter", {}) if ConfigManager else {}
 	display_name = str(cfg.get("display_name", "猎户"))
 	max_hp = int(cfg.get("max_hp", 70)) ; hp = max_hp
 	base_atk = int(cfg.get("base_atk", 9))

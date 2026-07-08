@@ -1,51 +1,71 @@
 extends Node
-## V0.3 ProgressFlags.gd - 进度标志存储器（自动序列化进存档）
-## 两套 API：布尔型 Set/Get/Has + KeyValue型 SetKV/GetKV
+## 全局进度标记（Autoload单例，Node名：Flags）
+## Set("cp_01") Has("cp_01") SetKV("gold", 123) GetKV("gold", 0)
 
-class_name ProgressFlagsCore
+var _flags: Dictionary = {}
+var _kv: Dictionary = {}
 
-var _bools: Dictionary = {}
-var _kvs: Dictionary = {}
+signal FlagSet(key: String, value: bool)
+signal FlagCleared(key: String)
+signal KVSet(key: String, value)
+signal FlagsReset()
 
-func Set(key: String, value: bool) -> void:
-	_bools[key] = value
+# ---------- Bool Flags ----------
+func Set(key: String, value: bool = true) -> void:
+	if key == null or key.is_empty():
+		return
+	var old: bool = _flags.get(key, false)
+	_flags[key] = value
+	if old != value:
+		FlagSet.emit(key, value)
 
-func Get(key: String) -> bool:
-	if not _bools.has(key):
-		return false
-	return _bools[key]
+func Unset(key: String) -> void:
+	if _flags.has(key):
+		_flags.erase(key)
+		FlagCleared.emit(key)
 
 func Has(key: String) -> bool:
-	return _bools.has(key)
+	return _flags.get(key, false)
 
-func SetKV(key: String, value: Variant) -> void:
-	_kvs[key] = value
+# ---------- Generic KV ----------
+func SetKV(key: String, value) -> void:
+	if key == null or key.is_empty():
+		return
+	_kv[key] = value
+	KVSet.emit(key, value)
 
-func GetKV(key: String, default: Variant = null) -> Variant:
-	if not _kvs.has(key):
-		return default
-	return _kvs[key]
+func GetKV(key: String, def_val = null):
+	return _kv.get(key, def_val)
 
 func HasKV(key: String) -> bool:
-	return _kvs.has(key)
+	return _kv.has(key)
 
-func serialize() -> Dictionary:
-	return {"bools": _bools.duplicate(true), "kvs": _kvs.duplicate(true)}
+func ResetAll() -> void:
+	_flags.clear()
+	_kv.clear()
+	FlagsReset.emit()
 
-func deserialize(data: Dictionary) -> void:
-	if data == null:
-		_bools.clear()
-		_kvs.clear()
-		return
-	if data.has("bools") and typeof(data["bools"]) == TYPE_DICTIONARY:
-		_bools = data["bools"].duplicate(true)
-	else:
-		_bools.clear()
-	if data.has("kvs") and typeof(data["kvs"]) == TYPE_DICTIONARY:
-		_kvs = data["kvs"].duplicate(true)
-	else:
-		_kvs.clear()
+# ---------- Serialize ----------
+func ToDictionary() -> Dictionary:
+	return {
+		"schema_ver": 1,
+		"flags": _flags.duplicate(true),
+		"kv": _kv.duplicate(true),
+		"saved_at_unix": Time.get_unix_time_from_system()
+	}
 
-func clear_all() -> void:
-	_bools.clear()
-	_kvs.clear()
+func FromDictionary(data: Dictionary) -> bool:
+	if not data.has("schema_ver") or int(data.get("schema_ver", 0)) != 1:
+		push_warning("[Flags] schema mismatch, skip load.")
+		return false
+	ResetAll()
+	if data.has("flags") and typeof(data["flags"]) == TYPE_DICTIONARY:
+		_flags = (data["flags"] as Dictionary).duplicate(true)
+	if data.has("kv") and typeof(data["kv"]) == TYPE_DICTIONARY:
+		_kv = (data["kv"] as Dictionary).duplicate(true)
+	return true
+
+func Dump() -> void:
+	print("=== Progress Flags ===")
+	print("Flags(n=", _flags.size(), "): ", JSON.stringify(_flags))
+	print("KV(n=", _kv.size(), "): ", JSON.stringify(_kv))

@@ -1,8 +1,7 @@
-extends PlayerBase
+extends "res://scripts/characters/PlayerBase.gd"
+class_name FarmerPlayer
 ## V0.3 FarmerPlayer.gd — 默认玩家布衣农夫 John
 ## 职责：数值初始化 + 简单几何图形绘制（无sprite资源依赖）
-
-class_name FarmerPlayer
 
 func _ready() -> void:
 	super._ready()
@@ -20,7 +19,7 @@ func _ready() -> void:
 	gravity = float(ConfigManager.cfg_get("physics.gravity", 1800)) if ConfigManager else 1800.0
 	weapon_defs = ConfigManager.cfg_get("player.farmer.weapons", {}) if ConfigManager else {}
 	attack_chain_cfg = ConfigManager.cfg_get("player.farmer.attack_chain", []) if ConfigManager else []
-	var def_wep := ConfigManager.cfg_get("player.farmer.default_weapon", "axe") if ConfigManager else "axe"
+	var def_wep: String = str(ConfigManager.cfg_get("player.farmer.default_weapon", "axe")) if ConfigManager else "axe"
 	if weapon_defs.has(def_wep):
 		current_weapon_id = def_wep
 		weapon = weapon_defs[def_wep]
@@ -62,7 +61,7 @@ func _draw() -> void:
 		_:
 			draw_line(Vector2(12 * facing, -4), Vector2(22 * facing, 0), Color(0.6,0.6,0.6), 2.5)
 	# BLOCK姿态: 前盾
-	if state == BaseState.BLOCK:
+	if state == _CE.BaseState.BLOCK:
 		var p := PackedVector2Array([
 			Vector2(18 * facing, -22), Vector2(28 * facing, -26),
 			Vector2(28 * facing, 6), Vector2(18 * facing, 2)])

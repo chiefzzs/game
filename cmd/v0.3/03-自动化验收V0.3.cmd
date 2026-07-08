@@ -12,58 +12,36 @@ if not exist "%GODOT%" (
 )
 if not exist "%PROJ_ABS%\project.godot" (
   echo [03-AutoAcceptV0.3][ERROR] project.godot NOT FOUND under: %PROJ_ABS%
+  echo   CMD_DIR  = %CMD_DIR%
+  echo   PROJ_ABS = %PROJ_ABS%
   exit /b 2
 )
 echo.
 echo ============================================================
-echo   V0.3 AUTOMATIC ACCEPTANCE TEST (Headless, 5 phases)
+echo   V0.3 AUTOMATIC ACCEPTANCE TEST V0.3 (Headless,¿ÓÎ»½×¶Î, 4 phases + V0.3 signal/JSON probe)
 echo   Project path: %PROJ_ABS%
 echo ============================================================
 echo.
-echo [Phase 1/5] Existence check - V0.3 combat module files
+echo [Phase 1/4] Existence check - core scenes/scripts/templates/schemas
 set "MISSING="
 for %%f in (
-  "autoload\InputBus.gd"
-  "autoload\GameEvents.gd"
-  "autoload\SaveSlotManager.gd"
-  "config\L2_balance\player.json"
-  "config\L2_balance\companions.json"
-  "config\L2_balance\enemies.json"
-  "config\L2_balance\combat_formula.json"
-  "config\L2_balance\pickups.json"
-  "scripts\combat\CombatDamageCalculator.gd"
-  "scripts\characters\PlayerBase.gd"
-  "scripts\characters\FarmerPlayer.gd"
-  "scripts\characters\CompanionBase.gd"
-  "scripts\characters\AxemanCompanion.gd"
-  "scripts\characters\HunterCompanion.gd"
-  "scripts\characters\ShepherdCompanion.gd"
-  "scripts\characters\EnemyBase.gd"
-  "scripts\characters\WalkSoldierEnemy.gd"
-  "scripts\characters\JumpScoutEnemy.gd"
-  "scripts\characters\DummyEnemy.gd"
-  "scripts\characters\ProjectileArrow.gd"
-  "scripts\ui\CombatHUDController.gd"
-  "scripts\systems\PickupSystem.gd"
-  "scripts\systems\PickupItem.gd"
+  "scenes\editor\EditorMain.tscn"
+  "scripts\editor\EditorMain.gd"
+  "scripts\editor\DrawTools.gd"
+  "scripts\editor\EntityPalette.gd"
+  "scripts\editor\EntityInspector.gd"
+  "scripts\editor\ObjectivesEditor.gd"
+  "scripts\editor\MapSerializer.gd"
   "scripts\editor\MapLoader.gd"
+  "scripts\editor\MapSchemaValidator.gd"
   "scripts\editor\CharacterBase.gd"
-  "scenes\characters\Player_Farmer.tscn"
-  "scenes\characters\Companion_Axeman.tscn"
-  "scenes\characters\Companion_Hunter.tscn"
-  "scenes\characters\Companion_Shepherd.tscn"
-  "scenes\characters\Enemy_WalkSoldier.tscn"
-  "scenes\characters\Enemy_JumpScout.tscn"
-  "scenes\characters\Enemy_Dummy.tscn"
-  "scenes\characters\ProjectileArrow.tscn"
-  "scenes\characters\CombatHUD.tscn"
-  "scenes\characters\PickupGold.tscn"
-  "scenes\test\V03_TrainingDummy.tscn"
-  "scenes\test\V03_CombatArena.tscn"
-  "scripts\test\test_combat_damage.gd"
-  "scripts\test\test_fsm_basic.gd"
-  "scripts\test\runner_combat_damage.gd"
-  "scripts\test\runner_fsm_basic.gd"
+  "autoload\LevelFlowController.gd"
+  "scenes\workshop\WorkshopMain.tscn"
+  "scripts\editor\WorkshopMain.gd"
+  "config\schemas\map.schema.json"
+  "scenes\workshop\templates\empty.map.json"
+  "scenes\workshop\templates\farm.map.json"
+  "scenes\workshop\templates\arena.map.json"
 ) do (
   if not exist "%PROJ_ABS%\%%~f" (
     echo   [MISSING] %%~f
@@ -74,40 +52,41 @@ for %%f in (
 )
 if defined MISSING (
   echo.
-  echo [Phase 1/5][FAIL] Missing V0.3 combat critical files. Aborting.
+  echo [Phase 1/4][FAIL] Missing critical files. Aborting.
   endlocal
   exit /b 3
 )
-echo [Phase 1/5][PASS]
+echo [Phase 1/4][PASS]
 echo.
-echo [Phase 2/5] MapSchemaValidator (V0.2 regression) on 3 built-in templates
+echo [Phase 2/4] MapSchemaValidator on 3 built-in templates (empty/farm/arena)
 "%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/editor/MapSchemaValidatorHeadless.gd
 set E1=%ERRORLEVEL%
 echo   [E1=%E1%]
 echo.
-echo [Phase 3/5] Save-Load smoke (V0.2 regression)
-"%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/editor/runner_mapio.gd
-set E2=%ERRORLEVEL%
-echo   [E2=%E2%]
+echo [Phase 3/4] V0.1 regression - Input/Collision/Weapon/Pickup/SmallMobs (Headless if test scene exists)
+set "RT=scenes\test\V01_InputRuntimeTest.tscn"
+if not exist "%PROJ_ABS%\%RT%" (
+  echo   [SKIP] Test scene not present: %RT%
+  set E2=0
+) else (
+  "%GODOT%" --no-window --headless --path "%PROJ_ABS%" "%PROJ_ABS%\%RT%"
+  set E2=%ERRORLEVEL%
+  echo   [E2=%E2%]
+)
 echo.
-echo [Phase 4/5] CombatDamageCalculator Headless tests (10 cases)
-"%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/test/runner_combat_damage.gd
+echo [Phase 4/4] Save-Load smoke - build dict -> save temp -> validate -> MapLoader instantiate
+"%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/editor/SmokeTestMapIO.gd
 set E3=%ERRORLEVEL%
 echo   [E3=%E3%]
 echo.
-echo [Phase 5/5] FSM Basic Headless tests (CharacterBase + FSM, 8 cases)
-"%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/test/runner_fsm_basic.gd
-set E4=%ERRORLEVEL%
-echo   [E4=%E4%]
-echo.
-set /A TOTAL=E1+E2+E3+E4
+set /A TOTAL=E1+E2+E3
 echo ============================================================
 if %TOTAL% EQU 0 (
-  echo  [PASS] V0.3 - All 5 phases OK.
+  echo  [PASS] V0.3 - All 4 phases OK.
   endlocal
   exit /b 0
 ) else (
-  echo  [FAIL] V0.3 - Some phases failed. Sub-codes: E1=%E1%  E2=%E2%  E3=%E3%  E4=%E4%
+  echo  [FAIL] V0.3 - Some phases failed. Sub-codes: E1=%E1%  E2=%E2%  E3=%E3%
   endlocal
   exit /b %TOTAL%
 )

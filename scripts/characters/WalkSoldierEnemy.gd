@@ -1,10 +1,10 @@
-extends EnemyBase
+extends "res://scripts/characters/EnemyBase.gd"
 ## V0.3 WalkSoldierEnemy.gd — 巡逻兵：短剑巡逻，稳定追击
 
 func _ready() -> void:
 	super._ready()
 	id_key = "walk_soldier"
-	var cfg := ConfigManager.cfg_get("enemies.walk_soldier", {}) if ConfigManager else {}
+	var cfg: Dictionary = ConfigManager.cfg_get("enemies.walk_soldier", {}) if ConfigManager else {}
 	display_name = str(cfg.get("display_name", "巡逻兵"))
 	max_hp = int(cfg.get("max_hp", 60)) ; hp = max_hp
 	base_atk = int(cfg.get("base_atk", 7))

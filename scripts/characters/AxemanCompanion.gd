@@ -1,10 +1,10 @@
-extends CompanionBase
+extends "res://scripts/characters/CompanionBase.gd"
 ## V0.3 AxemanCompanion.gd — 樵夫：双手斧，慢速重砍，破盾
 
 func _ready() -> void:
 	super._ready()
 	id_key = "axeman"
-	var cfg := ConfigManager.cfg_get("companions.axeman", {}) if ConfigManager else {}
+	var cfg: Dictionary = ConfigManager.cfg_get("companions.axeman", {}) if ConfigManager else {}
 	display_name = str(cfg.get("display_name", "樵夫"))
 	max_hp = int(cfg.get("max_hp", 120)) ; hp = max_hp
 	base_atk = int(cfg.get("base_atk", 12))
@@ -37,7 +37,7 @@ func _draw() -> void:
 		Vector2(12*facing,-20),Vector2(34*facing,-26),
 		Vector2(40*facing,-2),Vector2(16*facing,2)])
 	draw_colored_polygon(hx, weapon_color)
-	if state == BaseState.BLOCK:
+	if state == _CE.BaseState.BLOCK:
 		var p := PackedVector2Array([
 			Vector2(16*facing,-22),Vector2(26*facing,-26),
 			Vector2(26*facing,6),Vector2(16*facing,2)])

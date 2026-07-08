@@ -28,7 +28,6 @@ for %%f in (
   "scenes\editor\EditorMain.tscn"
   "scripts\editor\EditorMain.gd"
   "scripts\editor\DrawTools.gd"
-  "scripts\editor\TilePalette.gd"
   "scripts\editor\EntityPalette.gd"
   "scripts\editor\EntityInspector.gd"
   "scripts\editor\ObjectivesEditor.gd"

@@ -1,13 +1,29 @@
 {
-  "comment": "V0.3 L3 Levels placeholder - chapter chain (farm -> village -> town -> admin -> castle)",
+  "version": "1.0",
   "chapters": [
-    { "id": 0, "key": "prologue_farm",    "name": "序章 · 风起农场",   "map": "res://scenes/workshop/templates/farm.map.json",  "next": 1 },
-    { "id": 1, "key": "chapter1_village", "name": "第一章 · 村庄起义", "map": "", "next": 2 },
-    { "id": 2, "key": "chapter2_town",    "name": "第二章 · 夺取城镇", "map": "", "next": 3 },
-    { "id": 3, "key": "chapter3_castle",  "name": "第三章 · 强攻城堡", "map": "", "next": 4 },
-    { "id": 4, "key": "chapter4_boss",    "name": "第四章 · 大殿决战", "map": "", "next": -1 }
-  ],
-  "checkpoints": {
-    "prologue_farm_start": { "chapter": 0, "spawn_col": 2, "spawn_row": 10, "team_restore": true }
-  }
+    {
+      "id": "prologue",
+      "name": "序章：被烧毁的农场",
+      "stateLockedByDefault": false,
+      "requireFlags": [],
+      "mapOrder": ["farm_01"],
+      "nextChapter": "act_1_village"
+    },
+    {
+      "id": "act_1_village",
+      "name": "第一章：村庄集结",
+      "stateLockedByDefault": true,
+      "requireFlags": ["ch_prologue_done"],
+      "mapOrder": ["village_edge_01", "village_center"],
+      "nextChapter": "act_2_town"
+    },
+    {
+      "id": "act_2_town",
+      "name": "第二章：城镇物资",
+      "stateLockedByDefault": true,
+      "requireFlags": ["ch_act1_done"],
+      "mapOrder": ["town_gate", "town_market", "town_backalley"],
+      "nextChapter": "act_3_forest"
+    }
+  ]
 }

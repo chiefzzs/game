@@ -31,7 +31,7 @@ var last_enemy: Node = null
 var last_enemy_dmg: int = 0
 var last_enemy_timer: float = 0.0
 
-var float_text_nodes: Array[Node] = []
+var float_text_nodes: Array = []
 
 func _ready() -> void:
 	layer = 10
@@ -156,7 +156,7 @@ func _process(delta: float) -> void:
 		if last_enemy_timer <= 0.0:
 			_hide_enemy_hud()
 	for i in range(float_text_nodes.size() - 1, -1, -1):
-		var entry: Dictionary = float_text_nodes[i]
+		var entry = float_text_nodes[i]
 		entry["t"] += delta
 		var t: float = entry["t"]
 		var lbl: Label = entry["label"]
@@ -166,19 +166,21 @@ func _process(delta: float) -> void:
 			lbl.queue_free()
 			float_text_nodes.remove_at(i)
 	if enemy_hud_visible and last_enemy and is_instance_valid(last_enemy):
-		var hp: int = int(last_enemy.get("hp", 0)) if last_enemy.has("hp") else 0
-		var mh: int = int(last_enemy.get("max_hp", 1)) if last_enemy.has("max_hp") else 1
+		var hp: int = int(last_enemy.get("hp")) if last_enemy.has("hp") else 0
+		var mh: int = int(last_enemy.get("max_hp")) if last_enemy.has("max_hp") else 1
 		enemy_hud_bar_fill.size.x = 420.0 * clamp(float(hp) / float(mh), 0.0, 1.0)
 
-func _on_stats(c: CharacterBase) -> void:
-	if c == null or c.kind != 0:
+func _on_stats(c: Node) -> void:
+	if c == null or not (c.has("kind")) or int(c.get("kind")) != 1:
 		return
-	var hp: int = c.hp ; var mh: int = c.max_hp
-	var sp: float = c.stamina ; var ms: float = c.max_stamina
-	hp_bar_fill.size.x = 300.0 * clamp(float(hp) / float(mh), 0.0, 1.0)
+	var hp: int = int(c.get("hp")) if c.has("hp") else 0
+	var mh: int = int(c.get("max_hp")) if c.has("max_hp") else 100
+	var sp: float = float(c.get("stamina")) if c.has("stamina") else 100.0
+	var ms: float = float(c.get("max_stamina")) if c.has("max_stamina") else 100.0
+	hp_bar_fill.size.x = 300.0 * clamp(float(hp) / float(max(1, mh)), 0.0, 1.0)
 	hp_text.text = "HP: %d / %d" % [hp, mh]
 	sp_bar_fill.size.x = 300.0 * clamp(sp / max(1.0, ms), 0.0, 1.0)
-	var g := int(c.get("gold", 0)) if c.has("gold") else 0
+	var g := int(c.get("gold")) if c.has("gold") else 0
 	gold_text.text = "金币: %d" % g
 
 func _on_gold(_a: int, _b: Node, total: int) -> void:
@@ -204,9 +206,9 @@ func _on_atk(attacker: Node, victim: Node, dmg: int) -> void:
 		_show_enemy_hud(victim, dmg)
 
 func _on_dmg_calc(res: Dictionary) -> void:
-	var vic := res.get("victim", null)
+	var vic: Node = res.get("victim", null)
 	if vic and vic.has("kind"):
-		if int(vic.get("kind", -1)) == 2:
+		if int(vic.get("kind")) == 2:
 			_show_enemy_hud(vic, int(res.get("final_damage", 0)))
 
 func _show_enemy_hud(enemy: Node, fresh_dmg: int) -> void:
@@ -214,9 +216,9 @@ func _show_enemy_hud(enemy: Node, fresh_dmg: int) -> void:
 	last_enemy_timer = 3.0
 	enemy_hud_visible = true
 	last_enemy_dmg += fresh_dmg
-	var name_s := str(enemy.get("display_name", "?")) if enemy.has("display_name") else "?"
-	var hp: int = int(enemy.get("hp", 0)) if enemy.has("hp") else 0
-	var mh: int = int(enemy.get("max_hp", 1)) if enemy.has("max_hp") else 1
+	var name_s := str(enemy.get("display_name")) if enemy.has("display_name") else "?"
+	var hp: int = int(enemy.get("hp")) if enemy.has("hp") else 0
+	var mh: int = int(enemy.get("max_hp")) if enemy.has("max_hp") else 1
 	var vp := get_viewport().get_visible_rect().size
 	var x := vp.x * 0.5 - 210
 	var y := 70.0

@@ -1,8 +1,10 @@
-extends CharacterBase
+extends "res://scripts/editor/CharacterBase.gd"
 ## V0.3 scripts/characters/PlayerBase.gd — 玩家基础行为（订阅InputBus）
 ## 子类 FarmerPlayer 只负责数值初始化 + 外观绘制
+## [注意] 无class_name声明，避免注册顺序依赖；子类使用extends路径字符串
 
-class_name PlayerBase
+const _CE := preload("res://scripts/config/CharacterEnums.gd")
+const _CDC := preload("res://scripts/combat/CombatDamageCalculator.gd")
 
 var jump_count: int = 0
 var max_jumps: int = 2
@@ -18,7 +20,7 @@ var attack_chain_cfg: Array = []
 var gold: int = 0
 
 func _ready() -> void:
-	kind = CharacterKind.PLAYER
+	kind = _CE.CharacterKind.PLAYER
 	InputBus.axis_changed.connect(_on_axis)
 	InputBus.jump_pressed.connect(_on_jump_pressed)
 	InputBus.jump_released.connect(_on_jump_rel)
@@ -34,27 +36,27 @@ func _ready() -> void:
 	collision_mask = 8 | 4 | 2
 
 func _physics_process(delta: float) -> void:
-	if state == BaseState.DEAD:
+	if state == _CE.BaseState.DEAD:
 		tick_state(delta)
 		return
 	gravity_apply(delta)
 	update_timers(delta)
 	tick_state(delta)
-	regenerate_stamina(delta, state == BaseState.BLOCK)
-	if state != BaseState.DASH and state != BaseState.HURT \
-	   and state != BaseState.ATTACK1 and state != BaseState.ATTACK2 and state != BaseState.ATTACK3:
+	regenerate_stamina(delta, state == _CE.BaseState.BLOCK)
+	if state != _CE.BaseState.DASH and state != _CE.BaseState.HURT \
+	   and state != _CE.BaseState.ATTACK1 and state != _CE.BaseState.ATTACK2 and state != _CE.BaseState.ATTACK3:
 		var h: float = InputBus.axis_h
 		if is_on_floor():
 			velocity.x = move_toward(velocity.x, h * move_speed, 2000.0 * delta)
 			facing = 1.0 if h >= 0.0 else -1.0 if h < 0.0 else facing
-			if abs(h) > 0.01 and state == BaseState.IDLE:
-				change_state(BaseState.RUN)
-			elif abs(h) <= 0.01 and state == BaseState.RUN:
-				change_state(BaseState.IDLE)
+			if abs(h) > 0.01 and state == _CE.BaseState.IDLE:
+				change_state(_CE.BaseState.RUN)
+			elif abs(h) <= 0.01 and state == _CE.BaseState.RUN:
+				change_state(_CE.BaseState.IDLE)
 		else:
 			velocity.x = move_toward(velocity.x, h * move_speed, 1200.0 * delta)
-			if state == BaseState.RUN or state == BaseState.IDLE:
-				change_state(BaseState.JUMP)
+			if state == _CE.BaseState.RUN or state == _CE.BaseState.IDLE:
+				change_state(_CE.BaseState.JUMP)
 	_move_and_slide_checks()
 
 func _move_and_slide_checks() -> void:
@@ -63,13 +65,13 @@ func _move_and_slide_checks() -> void:
 	var now_on := is_on_floor()
 	if not was_on and now_on:
 		jump_count = 0
-		if state == BaseState.JUMP or state == BaseState.DOUBLEJUMP:
+		if state == _CE.BaseState.JUMP or state == _CE.BaseState.DOUBLEJUMP:
 			if abs(velocity.x) > 10.0:
-				change_state(BaseState.RUN)
+				change_state(_CE.BaseState.RUN)
 			else:
-				change_state(BaseState.IDLE)
-	elif not now_on and (state == BaseState.IDLE or state == BaseState.RUN):
-		change_state(BaseState.JUMP)
+				change_state(_CE.BaseState.IDLE)
+	elif not now_on and (state == _CE.BaseState.IDLE or state == _CE.BaseState.RUN):
+		change_state(_CE.BaseState.JUMP)
 
 func gravity_apply(delta: float) -> void:
 	velocity.y = clamp(velocity.y + gravity * delta, -2000.0,
@@ -93,7 +95,7 @@ func _on_jump_pressed(_held: bool) -> void:
 func _try_jump() -> void:
 	if jump_buffer_left <= 0.0:
 		return
-	if state == BaseState.BLOCK or state == BaseState.DEAD or state == BaseState.HURT:
+	if state == _CE.BaseState.BLOCK or state == _CE.BaseState.DEAD or state == _CE.BaseState.HURT:
 		return
 	var can_coyote: bool = is_on_floor() or coyote_left > 0.0
 	if can_coyote:
@@ -101,15 +103,15 @@ func _try_jump() -> void:
 		jump_count = 1
 		jump_buffer_left = 0.0
 		coyote_left = 0.0
-		if state == BaseState.ATTACK1 or state == BaseState.ATTACK2 or state == BaseState.ATTACK3:
+		if state == _CE.BaseState.ATTACK1 or state == _CE.BaseState.ATTACK2 or state == _CE.BaseState.ATTACK3:
 			pass
 		else:
-			change_state(BaseState.JUMP)
+			change_state(_CE.BaseState.JUMP)
 	elif jump_count < max_jumps:
 		velocity.y = float(ConfigManager.cfg_get("player.farmer.double_jump_force", -440)) if ConfigManager else -440
 		jump_count += 1
 		jump_buffer_left = 0.0
-		change_state(BaseState.DOUBLEJUMP)
+		change_state(_CE.BaseState.DOUBLEJUMP)
 
 func _on_jump_rel() -> void:
 	if velocity.y < -220.0:
@@ -118,7 +120,7 @@ func _on_jump_rel() -> void:
 func _on_dash() -> void:
 	if dash_cd_left > 0.0:
 		return
-	if state == BaseState.DEAD or state == BaseState.HURT:
+	if state == _CE.BaseState.DEAD or state == _CE.BaseState.HURT:
 		return
 	if stamina < 20.0:
 		return
@@ -133,10 +135,10 @@ func _on_dash() -> void:
 	is_invincible = true
 	invincible_timer = max(invincible_timer, float(ConfigManager.cfg_get("state_thresholds.dash_invincible_sec", 0.22)) if ConfigManager else 0.22)
 	dash_cd_left = float(ConfigManager.cfg_get("player.farmer.dash_cooldown_sec", 0.8)) if ConfigManager else 0.8
-	change_state(BaseState.DASH)
+	change_state(_CE.BaseState.DASH)
 
 func _on_attack() -> void:
-	if state == BaseState.DEAD or state == BaseState.HURT or state == BaseState.BLOCK or state == BaseState.DASH:
+	if state == _CE.BaseState.DEAD or state == _CE.BaseState.HURT or state == _CE.BaseState.BLOCK or state == _CE.BaseState.DASH:
 		return
 	if attack_chain_cfg.is_empty():
 		return
@@ -146,24 +148,24 @@ func _on_attack() -> void:
 		combo_index = 1
 	combo_window_left = float(ConfigManager.cfg_get("state_thresholds.combo_window_sec", 0.55)) if ConfigManager else 0.55
 	match combo_index:
-		1: change_state(BaseState.ATTACK1)
-		2: change_state(BaseState.ATTACK2)
-		3: change_state(BaseState.ATTACK3)
+		1: change_state(_CE.BaseState.ATTACK1)
+		2: change_state(_CE.BaseState.ATTACK2)
+		3: change_state(_CE.BaseState.ATTACK3)
 	attack_active_window = false
 	attack_hit_done = false
 	if GameEvents:
 		GameEvents.emit_signal("combo_changed", self, combo_index, attack_chain_cfg.size(), combo_window_left)
 
 func _on_block_pressed() -> void:
-	if state == BaseState.DEAD or state == BaseState.HURT or state == BaseState.DASH:
+	if state == _CE.BaseState.DEAD or state == _CE.BaseState.HURT or state == _CE.BaseState.DASH:
 		return
-	if state == BaseState.ATTACK1 or state == BaseState.ATTACK2 or state == BaseState.ATTACK3:
+	if state == _CE.BaseState.ATTACK1 or state == _CE.BaseState.ATTACK2 or state == _CE.BaseState.ATTACK3:
 		return
-	change_state(BaseState.BLOCK)
+	change_state(_CE.BaseState.BLOCK)
 
 func _on_block_released() -> void:
-	if state == BaseState.BLOCK:
-		change_state(BaseState.IDLE)
+	if state == _CE.BaseState.BLOCK:
+		change_state(_CE.BaseState.IDLE)
 
 func _on_weapon(slot: int) -> void:
 	var key := "fist"
@@ -208,9 +210,9 @@ func _tick_attack(delta: float) -> void:
 		else:
 			combo_index = 0
 			if is_on_floor():
-				change_state(BaseState.IDLE if abs(velocity.x) < 10.0 else BaseState.RUN)
+				change_state(_CE.BaseState.IDLE if abs(velocity.x) < 10.0 else _CE.BaseState.RUN)
 			else:
-				change_state(BaseState.JUMP)
+				change_state(_CE.BaseState.JUMP)
 
 func _do_attack_hit(cfg: Dictionary) -> void:
 	attack_hit_done = true
@@ -261,10 +263,10 @@ func _collect_enemies_in_range(origin: Vector2, r: float) -> Array[Node]:
 func take_damage_delegate(attacker: Node, victim: Node, raw_atk: int, dtype: String,
                           dir: Vector2, atk_mult: float, sb: bool) -> Dictionary:
 	if victim and victim.has_method("take_damage"):
-		var before: int = int(victim.get("hp", 0)) if victim.has("hp") else 0
-		var res = CombatDamageCalculator.calculate(attacker, victim, raw_atk, dtype, dir, sb, atk_mult)
+		var before: int = int(victim.get("hp")) if victim.has("hp") else 0
+		var res = _CDC.calculate(attacker, victim, raw_atk, dtype, dir, sb, atk_mult)
 		victim.take_damage(attacker, raw_atk, dtype, dir, sb)
-		var after: int = int(victim.get("hp", 0)) if victim.has("hp") else 0
+		var after: int = int(victim.get("hp")) if victim.has("hp") else 0
 		if before - after != int(res.get("final_damage", 0)) and GameEvents:
 			GameEvents.emit_signal("float_damage_requested", victim.global_position + Vector2(0, -20),
 				"%d" % res.get("final_damage", 0),
@@ -275,6 +277,6 @@ func take_damage_delegate(attacker: Node, victim: Node, raw_atk: int, dtype: Str
 func _tick_dash(_d: float) -> void:
 	if state_timer >= 0.22:
 		if is_on_floor():
-			change_state(BaseState.IDLE if abs(velocity.x) < 10.0 else BaseState.RUN)
+			change_state(_CE.BaseState.IDLE if abs(velocity.x) < 10.0 else _CE.BaseState.RUN)
 		else:
-			change_state(BaseState.JUMP)
+			change_state(_CE.BaseState.JUMP)

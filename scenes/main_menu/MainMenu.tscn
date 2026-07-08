@@ -30,11 +30,12 @@ theme_override_constants/separation = 20
 
 [node name="TitleLbl" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "中世纪农民起义 V0.2
+text = "中世纪农民起义 V0.3b
+7步伤害流水线实装
 ─────────────"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.96, 0.91, 0.79, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 32
 
 [node name="BtnNewGame" type="Button" parent="VBoxContainer"]
 layout_mode = 2
@@ -77,27 +78,34 @@ alignment = 1
 
 [node name="BtnTConfig" type="Button" parent="VBoxContainer/HSep2"]
 layout_mode = 2
-custom_minimum_size = Vector2(192, 44)
+custom_minimum_size = Vector2(152, 44)
 text = "🧪 Config测试"
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 14
 
 [node name="BtnTFlags" type="Button" parent="VBoxContainer/HSep2"]
 layout_mode = 2
-custom_minimum_size = Vector2(192, 44)
+custom_minimum_size = Vector2(152, 44)
 text = "🧪 Flags测试"
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 14
 
 [node name="BtnTSave" type="Button" parent="VBoxContainer/HSep2"]
 layout_mode = 2
-custom_minimum_size = Vector2(192, 44)
+custom_minimum_size = Vector2(152, 44)
 text = "🧪 Save测试"
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 14
 
 [node name="BtnTInput" type="Button" parent="VBoxContainer/HSep2"]
 layout_mode = 2
-custom_minimum_size = Vector2(192, 44)
+custom_minimum_size = Vector2(152, 44)
 text = "🧪 输入/碰撞"
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 14
+
+[node name="BtnTDamage" type="Button" parent="VBoxContainer/HSep2"]
+layout_mode = 2
+custom_minimum_size = Vector2(152, 44)
+text = "🔥 V0.3b伤害演示"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.86, 0.4, 1)
 
 [node name="BtnQuit" type="Button" parent="VBoxContainer"]
 layout_mode = 2

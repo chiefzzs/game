@@ -1,7 +1,10 @@
-extends CharacterBase
+extends "res://scripts/editor/CharacterBase.gd"
 ## V0.3 CompanionBase.gd — 同伴AI基类 (简单FSM: FOLLOW→ALERT→ATTACK→RETREAT)
 ## 具体数值由子类(Axeman/Hunter/Shepherd)在_ready初始化
-class_name CompanionBase
+## [注意] 无class_name声明，避免注册顺序依赖；子类使用extends路径字符串
+
+const _CE := preload("res://scripts/config/CharacterEnums.gd")
+const _CDC := preload("res://scripts/combat/CombatDamageCalculator.gd")
 
 enum AIState { FOLLOW = 0, ALERT = 1, ATTACK = 2, RETREAT = 3 }
 var ai_state: AIState = AIState.FOLLOW
@@ -13,7 +16,7 @@ var owner: CharacterBase = null
 var preferred_distance: float = 80.0
 
 func _ready() -> void:
-	kind = CharacterKind.COMPANION
+	kind = _CE.CharacterKind.COMPANION
 	collision_layer = 2
 	collision_mask = 8 | 4
 	var cs := CollisionShape2D.new()
@@ -27,7 +30,7 @@ func link_owner(path: NodePath) -> void:
 	owner_ref = path
 
 func _physics_process(delta: float) -> void:
-	if state == BaseState.DEAD:
+	if state == _CE.BaseState.DEAD:
 		tick_state(delta)
 		return
 	if owner == null and owner_ref.is_empty() == false and has_node(owner_ref):
@@ -82,16 +85,16 @@ func ai_tick(delta: float) -> void:
 func _ai_follow(_delta: float, to_owner: Vector2, dist: float) -> void:
 	if dist <= preferred_distance:
 		velocity.x = move_toward(velocity.x, 0.0, 1500.0 * get_physics_process_delta_time())
-		if is_on_floor() and state != BaseState.IDLE:
-			change_state(BaseState.IDLE)
+		if is_on_floor() and state != _CE.BaseState.IDLE:
+			change_state(_CE.BaseState.IDLE)
 		return
 	var dir := to_owner.normalized()
 	facing = 1.0 if dir.x >= 0.0 else -1.0
 	velocity.x = move_toward(velocity.x, dir.x * move_speed, 1500.0 * get_physics_process_delta_time())
 	if jump_force < 0.0 and velocity.y >= 0.0 and dir.y < -0.2 and is_on_floor():
 		velocity.y = jump_force * 0.8
-	if is_on_floor() and state != BaseState.RUN:
-		change_state(BaseState.RUN)
+	if is_on_floor() and state != _CE.BaseState.RUN:
+		change_state(_CE.BaseState.RUN)
 
 func _ai_alert(_delta: float, target: Node) -> void:
 	if target == null:
@@ -105,8 +108,8 @@ func _ai_alert(_delta: float, target: Node) -> void:
 		velocity.x = move_toward(velocity.x, dir_s * move_speed, 1500.0 * get_physics_process_delta_time())
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, 1500.0 * get_physics_process_delta_time())
-	if is_on_floor() and state != BaseState.IDLE and abs(velocity.x) < 15.0:
-		change_state(BaseState.IDLE)
+	if is_on_floor() and state != _CE.BaseState.IDLE and abs(velocity.x) < 15.0:
+		change_state(_CE.BaseState.IDLE)
 
 func _ai_attack(delta: float, target: Node) -> void:
 	if target == null:
@@ -124,16 +127,16 @@ func _ai_attack(delta: float, target: Node) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, 1500.0 * delta)
 
 func _perform_attack(target: Node) -> void:
-	if state == BaseState.ATTACK1 or state == BaseState.ATTACK2 or state == BaseState.HURT or state == BaseState.DEAD:
+	if state == _CE.BaseState.ATTACK1 or state == _CE.BaseState.ATTACK2 or state == _CE.BaseState.HURT or state == _CE.BaseState.DEAD:
 		return
-	change_state(BaseState.ATTACK1)
+	change_state(_CE.BaseState.ATTACK1)
 	var raw_atk: int = base_atk
 	var atk_mult: float = 1.0
 	if typeof(weapon) == TYPE_DICTIONARY:
 		atk_mult = float(weapon.get("atk_mult", 1.0))
 	var dir: Vector2 = Vector2(facing, 0.0)
 	var sb: bool = bool(weapon.get("break_shield", false)) if typeof(weapon)==TYPE_DICTIONARY else false
-	CombatDamageCalculator.calculate(self, target, raw_atk,
+	_CDC.calculate(self, target, raw_atk,
 		"arrow" if bool(weapon.get("projectile",false)) else "physical", dir, sb, atk_mult)
 	if target and target.has_method("take_damage"):
 		target.take_damage(self, raw_atk, "physical", dir, sb)

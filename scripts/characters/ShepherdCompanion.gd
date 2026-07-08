@@ -1,10 +1,10 @@
-extends CompanionBase
+extends "res://scripts/characters/CompanionBase.gd"
 ## V0.3 ShepherdCompanion.gd — 牧人：近战+全队周期回血+替主角挡50%
 
 func _ready() -> void:
 	super._ready()
 	id_key = "shepherd"
-	var cfg := ConfigManager.cfg_get("companions.shepherd", {}) if ConfigManager else {}
+	var cfg: Dictionary = ConfigManager.cfg_get("companions.shepherd", {}) if ConfigManager else {}
 	display_name = str(cfg.get("display_name", "牧人"))
 	max_hp = int(cfg.get("max_hp", 80)) ; hp = max_hp
 	base_atk = int(cfg.get("base_atk", 6))

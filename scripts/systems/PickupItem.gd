@@ -40,7 +40,7 @@ func _do_pickup(by_who: Node) -> void:
 		return
 	match item_id:
 		"gold":
-			var before := int(by_who.get("gold", 0)) if by_who.has("gold") else 0
+			var before := int(by_who.get("gold")) if by_who.has("gold") else 0
 			if by_who.has("gold"):
 				by_who.set("gold", before + value)
 			var total := before + value

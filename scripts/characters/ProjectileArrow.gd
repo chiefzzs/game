@@ -3,6 +3,8 @@ extends CharacterBody2D
 
 class_name ProjectileArrow
 
+const _CDC := preload("res://scripts/combat/CombatDamageCalculator.gd")
+
 var velocity_2d: Vector2 = Vector2.ZERO
 var source: Node = null
 var damage_value: int = 0
@@ -55,7 +57,7 @@ func _apply_hit(target: Node) -> void:
 	if dir.x == 0 and dir.y == 0:
 		dir = Vector2.RIGHT
 	var sb: bool = false
-	CombatDamageCalculator.calculate(source, target, damage_value, "arrow", dir, sb, 1.0)
+	_CDC.calculate(source, target, damage_value, "arrow", dir, sb, 1.0)
 	if target and target.has_method("take_damage"):
 		target.take_damage(source, damage_value, "arrow", dir, sb)
 

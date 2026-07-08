@@ -1,8 +1,10 @@
-extends CharacterBase
+extends "res://scripts/editor/CharacterBase.gd"
 ## V0.3 EnemyBase.gd — 敌人AI基类: PATROL→CHASE→ATTACK→HURT→DEAD
 ## 具体数值 WalkSoldier/JumpScout/Dummy 子类初始化
+## [注意] 无class_name声明，避免注册顺序依赖；子类使用extends路径字符串
 
-class_name EnemyBase
+const _CE := preload("res://scripts/config/CharacterEnums.gd")
+const _CDC := preload("res://scripts/combat/CombatDamageCalculator.gd")
 
 enum EAI { PATROL = 0, CHASE = 1, ATTACK = 2, GIVE_UP = 3 }
 var eai: EAI = EAI.PATROL
@@ -13,7 +15,7 @@ var patrol_timer: float = 0.0
 var training_dummy: bool = false
 
 func _ready() -> void:
-	kind = CharacterKind.ENEMY
+	kind = _CE.CharacterKind.ENEMY
 	collision_layer = 4
 	collision_mask = 8 | 1 | 2
 	var cs := CollisionShape2D.new()
@@ -24,7 +26,7 @@ func _ready() -> void:
 	add_child(cs)
 
 func _physics_process(delta: float) -> void:
-	if state == BaseState.DEAD:
+	if state == _CE.BaseState.DEAD:
 		tick_state(delta)
 		if state_timer >= float(ConfigManager.cfg_get("state_thresholds.dead_despawn_sec", 2.5)) if ConfigManager else 2.5:
 			_on_despawn()
@@ -62,8 +64,8 @@ func _enemy_ai(delta: float) -> void:
 				velocity.x = move_toward(velocity.x, sign(to_target.x) * move_speed, 1500.0 * delta)
 				if jump_force < 0.0 and is_on_floor() and to_target.y < -40.0 and randf() < float(ai_cfg.get("auto_jump_chance", 0.1)):
 					velocity.y = jump_force
-				if is_on_floor() and state != BaseState.RUN:
-					change_state(BaseState.RUN)
+				if is_on_floor() and state != _CE.BaseState.RUN:
+					change_state(_CE.BaseState.RUN)
 		EAI.ATTACK:
 			if target == null:
 				eai = EAI.PATROL
@@ -74,7 +76,7 @@ func _enemy_ai(delta: float) -> void:
 			else:
 				facing = 1.0 if to_target.x >= 0.0 else -1.0
 				velocity.x = move_toward(velocity.x, 0.0, 1500.0 * delta)
-				if attack_cd_left <= 0.0 and state != BaseState.HURT:
+				if attack_cd_left <= 0.0 and state != _CE.BaseState.HURT:
 					_perform_attack(target)
 					var cdr: float = float(weapon.get("cd_sec", 1.0)) if typeof(weapon)==TYPE_DICTIONARY else 1.0
 					attack_cd_left = cdr
@@ -90,8 +92,8 @@ func _do_patrol(delta: float) -> void:
 	var pr: float = float(ai_cfg.get("patrol_radius", 120))
 	if pr <= 0.0:
 		velocity.x = move_toward(velocity.x, 0.0, 1500.0 * delta)
-		if is_on_floor() and state != BaseState.IDLE:
-			change_state(BaseState.IDLE)
+		if is_on_floor() and state != _CE.BaseState.IDLE:
+			change_state(_CE.BaseState.IDLE)
 		return
 	if patrol_timer > 2.0:
 		patrol_timer = 0.0
@@ -99,22 +101,22 @@ func _do_patrol(delta: float) -> void:
 			patrol_dir = -patrol_dir
 	facing = patrol_dir
 	velocity.x = move_toward(velocity.x, patrol_dir * move_speed * 0.5, 1500.0 * delta)
-	if is_on_floor() and abs(velocity.x) > 5.0 and state != BaseState.RUN:
-		change_state(BaseState.RUN)
-	elif is_on_floor() and abs(velocity.x) <= 5.0 and state != BaseState.IDLE:
-		change_state(BaseState.IDLE)
+	if is_on_floor() and abs(velocity.x) > 5.0 and state != _CE.BaseState.RUN:
+		change_state(_CE.BaseState.RUN)
+	elif is_on_floor() and abs(velocity.x) <= 5.0 and state != _CE.BaseState.IDLE:
+		change_state(_CE.BaseState.IDLE)
 
 func _perform_attack(target: Node) -> void:
-	if state == BaseState.ATTACK1 or state == BaseState.HURT or state == BaseState.DEAD:
+	if state == _CE.BaseState.ATTACK1 or state == _CE.BaseState.HURT or state == _CE.BaseState.DEAD:
 		return
-	change_state(BaseState.ATTACK1)
+	change_state(_CE.BaseState.ATTACK1)
 	var raw_atk: int = base_atk
 	var atk_mult: float = 1.0
 	if typeof(weapon) == TYPE_DICTIONARY:
 		atk_mult = float(weapon.get("atk_mult", 1.0))
 	var dir: Vector2 = Vector2(facing, 0.0)
 	var sb: bool = bool(weapon.get("break_shield", false)) if typeof(weapon)==TYPE_DICTIONARY else false
-	CombatDamageCalculator.calculate(self, target, raw_atk, "physical", dir, sb, atk_mult)
+	_CDC.calculate(self, target, raw_atk, "physical", dir, sb, atk_mult)
 	if target and target.has_method("take_damage"):
 		target.take_damage(self, raw_atk, "physical", dir, sb)
 
@@ -162,5 +164,5 @@ func _on_death(killer: Node) -> void:
 	if training_dummy:
 		hp = max_hp
 		alive = true
-		change_state(BaseState.IDLE)
+		change_state(_CE.BaseState.IDLE)
 		return

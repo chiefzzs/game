@@ -9,6 +9,7 @@ extends Control
 @onready var btn_tflags: Button = $VBoxContainer/HSep2/BtnTFlags
 @onready var btn_tsave: Button = $VBoxContainer/HSep2/BtnTSave
 @onready var btn_tinput: Button = $VBoxContainer/HSep2/BtnTInput
+@onready var btn_tdamage: Button = $VBoxContainer/HSep2/BtnTDamage
 @onready var btn_quit: Button = $VBoxContainer/BtnQuit
 @onready var lbl_log: Label = $VBoxContainer/LblLog
 
@@ -31,6 +32,10 @@ func _ready() -> void:
 	btn_tinput.pressed.connect(func():
 		AppendLog("🧪 跳转到 输入+碰撞 测试（A/D移动 Space跳 LT格挡）")
 		get_tree().change_scene_to_file("res://scenes/test/V01_InputCollisionTest.tscn"))
+	btn_tdamage.pressed.connect(func():
+		AppendLog("🔥 V0.3b 伤害演示：7 步流水线 + 颜色浮动文字模拟（6按钮看典型结果）")
+		AppendLog("   手册附录：如何操作 → 每个按钮对应 UC01~UC08 验收用例")
+		get_tree().change_scene_to_file("res://scenes/test/V03b_DamageDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
 	AppendLog("> 进入主菜单（V0.1），请点击按钮测试~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")

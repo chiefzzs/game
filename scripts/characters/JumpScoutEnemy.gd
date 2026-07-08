@@ -1,10 +1,10 @@
-extends EnemyBase
+extends "res://scripts/characters/EnemyBase.gd"
 ## V0.3 JumpScoutEnemy.gd — 跳跃斥候：高机动双匕
 
 func _ready() -> void:
 	super._ready()
 	id_key = "jump_scout"
-	var cfg := ConfigManager.cfg_get("enemies.jump_scout", {}) if ConfigManager else {}
+	var cfg: Dictionary = ConfigManager.cfg_get("enemies.jump_scout", {}) if ConfigManager else {}
 	display_name = str(cfg.get("display_name", "跳跃斥候"))
 	max_hp = int(cfg.get("max_hp", 40)) ; hp = max_hp
 	base_atk = int(cfg.get("base_atk", 6))
