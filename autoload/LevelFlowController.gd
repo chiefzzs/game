@@ -96,8 +96,8 @@ func complete_objective(obj_id: String) -> void:
 			obj["status"] = "done"
 			var reward: Dictionary = obj.get("reward", {})
 			objective_completed.emit(obj_id, reward)
-			if ProgressFlags:
-				ProgressFlags.Set("obj_done_" + current_level_id + "_" + obj_id)
+			if Flags:
+				Flags.Set("obj_done_" + current_level_id + "_" + obj_id)
 			break
 	# Check all done: if status of root is AND, all must be done; if OR, any done triggers
 	if _evaluate_root_done():
@@ -114,8 +114,8 @@ func trigger_checkpoint(cp_id: String, pos: Vector2, flags: Dictionary = {}) -> 
 	checkpoints["current"] = cp_id
 	var cp_data: Dictionary = {"pos": {"x": pos.x, "y": pos.y}, "flags": flags, "ts": Time.get_ticks_msec()}
 	checkpoints["checkpoints"][cp_id] = cp_data
-	if ProgressFlags:
-		ProgressFlags.SetKV("cp_" + current_level_id + "_" + cp_id, cp_data)
+	if Flags:
+		Flags.SetKV("cp_" + current_level_id + "_" + cp_id, cp_data)
 
 func trigger_fail(reason: String) -> void:
 	last_fail_reason = reason
@@ -139,8 +139,8 @@ func exit_level(next_id: String) -> void:
 	if current_state == STATE_EXITING:
 		return
 	var snap: Dictionary = {}
-	if ProgressFlags:
-		snap = ProgressFlags.SerializeKV()
+	if Flags:
+		snap = Flags.SerializeKV()
 	_change_state(STATE_EXITING, {"target": "next_level", "next_level": next_id})
 	level_exit.emit(next_id, snap)
 

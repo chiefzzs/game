@@ -9,15 +9,13 @@ popd
 if not exist "%GODOT%" (
   echo [01-LaunchEditor][ERROR] Godot not found at: %GODOT%
   echo   Please edit this .cmd and change the GODOT variable to match your local Godot 4.6.2 path.
-  pause
   exit /b 1
 )
 if not exist "%PROJ_ABS%\project.godot" (
   echo [01-LaunchEditor][ERROR] project.godot NOT FOUND under: %PROJ_ABS%
   echo   CMD_DIR  = %CMD_DIR%
   echo   PROJ_ABS = %PROJ_ABS%
-  echo   Expected: PROJ_ABS should resolve to D:\learnning\game1 (project root with project.godot inside)
-  pause
+  echo   Expected: PROJ_ABS should resolve to project root with project.godot inside.
   exit /b 2
 )
 echo.

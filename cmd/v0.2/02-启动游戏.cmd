@@ -8,14 +8,12 @@ set "PROJ_ABS=%CD%"
 popd
 if not exist "%GODOT%" (
   echo [02-LaunchGame][ERROR] Godot not found at: %GODOT%
-  pause
   exit /b 1
 )
 if not exist "%PROJ_ABS%\project.godot" (
   echo [02-LaunchGame][ERROR] project.godot NOT FOUND under: %PROJ_ABS%
   echo   CMD_DIR  = %CMD_DIR%
   echo   PROJ_ABS = %PROJ_ABS%
-  pause
   exit /b 2
 )
 echo.

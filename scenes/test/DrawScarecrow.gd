@@ -82,7 +82,7 @@ func _draw() -> void:
 	var spikes := 24
 	for i in range(spikes):
 		var ang := float(i) * (2.0 * PI / float(spikes))
-		var r_outer := 17.5 + (randfn() * 0.6 + 1.8)
+		var r_outer := 17.5 + (randfn(0.0, 1.0) * 0.6 + 1.8)
 		var r_inner := 14.0
 		var p1 := Vector2(cos(ang), sin(ang)) * r_inner + Vector2(0, -22)
 		var p2 := Vector2(cos(ang), sin(ang)) * r_outer + Vector2(0, -22)
