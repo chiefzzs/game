@@ -32,6 +32,7 @@ var _is_blocking: bool = false
 var _inventory_gold: int = 0
 var _inventory_pot: int = 0
 var _has_weapon: bool = false
+var _last_facing: float = 1.0
 var _nearby_pickups: Array[Node] = []
 var _is_climbing: bool = false
 var _in_ladder_area: bool = false
@@ -76,6 +77,11 @@ func _ready() -> void:
 			area.body_exited.connect(func(b: Node): _on_area2d_body_exited(area, b))
 	hud("[OK] Scene ready. onFloor=%s" % player.is_on_floor())
 	hud("[INFO] Gold=0 Potion=0 Nearby=0 Climb=false DashCD=0.0")
+	# 初始化最近朝向：从场景里 drawer 的初始 scale.x 读取（支持场景默认朝左）
+	if drawer:
+		_last_facing = 1.0 if drawer.scale.x >= 0.0 else -1.0
+	else:
+		_last_facing = 1.0
 	_refresh_inventory()
 	_refresh_bars()
 	_flush()
@@ -195,10 +201,11 @@ func _on_block_p() -> void:
 	_is_blocking = true
 	if shield:
 		shield.visible = true
+		shield.position.x = 18.0 if _last_facing > 0.0 else -18.0
 	if block_aura:
 		block_aura.visible = true
 	_update_aura_color()
-	hud("[OK] BlockPressed (shield + yellow aura ON)")
+	hud("[OK] BlockPressed (shield + yellow aura ON, facing %s)" % ["→R" if _last_facing>0 else "←L"])
 
 func _on_block_r() -> void:
 	_is_blocking = false
@@ -220,25 +227,28 @@ func _on_attack() -> void:
 	spend_stamina(ATTACK_STAMINA_COST)
 	_attack_cd = ATTACK_COOLDOWN
 	_stamina_recovery_cd = STAMINA_RECOVERY_COOLDOWN
-	hud("[ATTACK] Rake swing!  (-%d SP, CD=%.2fs)" % [ATTACK_STAMINA_COST, ATTACK_COOLDOWN])
-	# 挥击动画：围绕当前基准角(WEAPON_BASE_ROT*朝向)做举高→横扫→回弹→归位
-	# 耙子始终保持拾取时的样貌（形状和地上钉耙一模一样），动画只是Node2D旋转
+	# 攻击朝向固定使用 _last_facing（最近一次玩家方向），保证挥击方向与玩家朝向始终一致
+	var fw: float = _last_facing
+	if fw == 0.0:
+		fw = 1.0
+		_last_facing = 1.0
+	hud("[ATTACK] Rake swing %s!  (-%d SP, CD=%.2fs)" % ["→Right" if fw > 0.0 else "←Left", ATTACK_STAMINA_COST, ATTACK_COOLDOWN])
 	if weapon_holder:
 		if _attack_tween and _attack_tween.is_valid():
 			_attack_tween.kill()
-		var fw: float = 1.0 if drawer and drawer.scale.x >= 0.0 else -1.0
+		# 攻击触发瞬间先同步一次，确保挥击起点的位置/镜像/旋转与朝向一致（基准正确）
+		weapon_holder.scale.x = fw
+		weapon_holder.position.x = WEAPON_HOLD_X_RIGHT * fw
+		weapon_holder.position.y = 6.0
 		var base_rot: float = WEAPON_BASE_ROT * fw
-		# lift up (raise tines high above shoulder)
+		# 4段挥击：以基准角为中心举高→横扫→回弹→精准归位，全程方向与玩家一致
 		weapon_holder.rotation = base_rot + 1.05
 		_attack_tween = create_tween()
 		_attack_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		# 0.11s horizontal swing to forward-down strike (tines point at enemy in front)
 		_attack_tween.tween_property(weapon_holder, "rotation", base_rot - 1.25, 0.11)
 		_attack_tween.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-		# elastic recoil (flex back)
 		_attack_tween.tween_property(weapon_holder, "rotation", base_rot - 0.3, 0.20)
 		_attack_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		# settle exactly to base rotation (rake look = identical to pickup shape)
 		_attack_tween.tween_property(weapon_holder, "rotation", base_rot, 0.08)
 
 func _update_aura_color() -> void:
@@ -275,12 +285,15 @@ func _pickup_one(pickup: Node) -> void:
 			_has_weapon = true
 			if weapon_holder:
 				weapon_holder.visible = true
-				var f: float = 1.0 if drawer.scale.x >= 0.0 else -1.0
+				var f: float = _last_facing
+				if f == 0.0:
+					f = 1.0
+					_last_facing = 1.0
 				weapon_holder.scale.x = f
 				weapon_holder.position.x = WEAPON_HOLD_X_RIGHT * f
 				weapon_holder.position.y = 6.0
 				weapon_holder.rotation = WEAPON_BASE_ROT * f
-			hud("[AUTO-PICKUP] + Farming Rake!  Press X / J to attack")
+			hud("[AUTO-PICKUP] + Farming Rake!  Press X / J to attack (%s)" % ["→Face Right" if _last_facing > 0.0 else "←Face Left"])
 		_:
 			hud("[AUTO-PICKUP] unknown kind=%s" % kind)
 	if pickup.has_method("queue_free"):
@@ -367,16 +380,23 @@ func _physics_process(delta: float) -> void:
 		_pickup_one(item)
 	if abs(InputBus.moveAxis) > 0.01 and drawer:
 		drawer.scale.x = -1.0 if InputBus.moveAxis < 0.0 else 1.0
+		_last_facing = drawer.scale.x
 		if shield:
 			shield.position.x = 18.0 if drawer.scale.x > 0.0 else -18.0
-		if weapon_holder:
-			var fw: float = 1.0 if drawer.scale.x >= 0.0 else -1.0
-			weapon_holder.scale.x = fw
-			weapon_holder.position.x = WEAPON_HOLD_X_RIGHT * fw
-			weapon_holder.position.y = 6.0
-			# If attack cooldown, do not clobber mid-swing rotation (attack tweener owns it)
-			if _attack_cd <= 0.0:
-				weapon_holder.rotation = WEAPON_BASE_ROT * fw
+	# WeaponHolder 朝向/位置 每帧维护（不再依赖 moveAxis>0，静止时也保持一致），
+	# 但挥击动画期间（_attack_cd > 0）完全不修改 transform，保证挥击轴心和方向不变
+	if weapon_holder and _attack_cd <= 0.0:
+		var fw: float = 1.0 if drawer and drawer.scale.x >= 0.0 else _last_facing
+		# 额外防御：若上一次 fw 没读到，用缓存的最近朝向
+		if fw == 0.0:
+			fw = _last_facing
+		weapon_holder.scale.x = fw
+		weapon_holder.position.x = WEAPON_HOLD_X_RIGHT * fw
+		weapon_holder.position.y = 6.0
+		weapon_holder.rotation = WEAPON_BASE_ROT * fw
+	# 格挡中（即使无移动输入），盾的朝向也跟随最近朝向，避免盾停留在旧方向
+	if shield and _is_blocking:
+		shield.position.x = 18.0 if _last_facing > 0.0 else -18.0
 	if _attack_cd > 0.0:
 		_attack_cd = max(0.0, _attack_cd - delta)
 	# block 持续消耗体力 + 体力耗尽自动解除格挡
