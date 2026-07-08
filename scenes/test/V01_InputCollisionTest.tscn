@@ -46,13 +46,13 @@ shape = SubResource("RectShape_ground")
 
 [node name="Platform1Bg" type="ColorRect" parent="World"]
 offset_left = 640.0
-offset_top = 748.0
+offset_top = 798.0
 offset_right = 920.0
-offset_bottom = 772.0
+offset_bottom = 822.0
 color = Color(0.45, 0.34, 0.24, 1)
 
 [node name="Platform1" type="StaticBody2D" parent="World"]
-position = Vector2(780, 760)
+position = Vector2(780, 810)
 collision_layer = 4
 collision_mask = 0
 
@@ -61,13 +61,13 @@ shape = SubResource("RectShape_plat")
 
 [node name="Platform2Bg" type="ColorRect" parent="World"]
 offset_left = 1060.0
-offset_top = 608.0
+offset_top = 688.0
 offset_right = 1340.0
-offset_bottom = 632.0
+offset_bottom = 712.0
 color = Color(0.45, 0.34, 0.24, 1)
 
 [node name="Platform2" type="StaticBody2D" parent="World"]
-position = Vector2(1200, 620)
+position = Vector2(1200, 700)
 collision_layer = 4
 collision_mask = 0
 
@@ -91,7 +91,7 @@ role = "ladder"
 shape = SubResource("RectShape_ladder")
 
 [node name="Gold1" type="Area2D" parent="World"]
-position = Vector2(830, 718)
+position = Vector2(830, 768)
 collision_layer = 32
 collision_mask = 1
 role = "pickup"
@@ -104,7 +104,7 @@ script = ExtResource("3_golddraw")
 shape = SubResource("CircShape_gold")
 
 [node name="Gold2" type="Area2D" parent="World"]
-position = Vector2(1250, 580)
+position = Vector2(1250, 660)
 collision_layer = 32
 collision_mask = 1
 role = "pickup"
