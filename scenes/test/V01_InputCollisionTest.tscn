@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://b0inputtest001"]
+[gd_scene load_steps=12 format=3 uid="uid://b0inputtest001"]
 
 [ext_resource type="Script" path="res://scenes/test/V01_InputCollisionTest.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/test/DrawPlayerSimple.gd" id="2_drawplayer"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scenes/test/DrawRake.gd" id="6_rakedraw"]
 [ext_resource type="Script" path="res://scenes/test/Scarecrow.gd" id="7_scarecrow_ai"]
 [ext_resource type="Script" path="res://scenes/test/DrawScarecrow.gd" id="8_scarecrow_draw"]
+[ext_resource type="Script" path="res://scenes/test/DrawEnemyRect.gd" id="9_enemy_rect"]
 
 [sub_resource type="RectangleShape2D" id="RectShape_player"]
 size = Vector2(28, 48)
@@ -205,7 +206,7 @@ position = Vector2(1100, 700)
 script = ExtResource("7_scarecrow_ai")
 
 [node name="Drawer" type="Node2D" parent="World/Scarecrow1"]
-script = ExtResource("8_scarecrow_draw")
+script = ExtResource("9_enemy_rect")
 
 [node name="Coll" type="CollisionShape2D" parent="World/Scarecrow1"]
 shape = SubResource("RectShape_skr")
@@ -215,7 +216,7 @@ position = Vector2(1520, 770)
 script = ExtResource("7_scarecrow_ai")
 
 [node name="Drawer" type="Node2D" parent="World/Scarecrow2"]
-script = ExtResource("8_scarecrow_draw")
+script = ExtResource("9_enemy_rect")
 
 [node name="Coll" type="CollisionShape2D" parent="World/Scarecrow2"]
 shape = SubResource("RectShape_skr")

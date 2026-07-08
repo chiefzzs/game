@@ -1,11 +1,8 @@
 extends CharacterBody2D
 class_name Scarecrow
-## Scarecrow enemy AI: patrol / chase / melee-attack player.
-##   - HP 30, ATK 10, patrol speed 40, chase speed 80
-##   - Patrols ±40px from spawn; chases player when <180px distance;
-##     attacks when <34px, 1.2s cooldown, calls damage_player(ATK) on scene root
-##   - take_damage(dmg) -> blood flash + HP down; emits died() when killed
-##   - Scene root should connect died() to drop gold pickups.
+## 敌人 AI（巡逻/警戒/追击/近战攻击）
+##  - 视觉：DrawEnemyRect（浅灰矩形+持剑）；Drawer.show_exclamation() 触发头顶感叹号
+##  - 广播：首次发现玩家时通知 250px 内所有 Scarecrow 进入警戒
 signal died()
 signal hited_someone(dmg: int)
 
@@ -15,30 +12,34 @@ const PATROL_SPD: float = 40.0
 const CHASE_SPD: float = 80.0
 const PATROL_RANGE: float = 40.0
 const CHASE_DIST: float = 180.0
+const ALERT_DIST: float = 260.0
 const ATTACK_DIST: float = 34.0
 const ATTACK_CD: float = 1.2
+const GROUP_ENEMY := "enemies_v02"
 
 var hp: int = MAX_HP
 var _attack_cd: float = 0.0
-var _state: String = "patrol"  # patrol | chase | attack
+var _state: String = "patrol"  # patrol | alert | chase | attack
 var _spawn_x: float = 0.0
 var _patrol_dir: float = 1.0
 var _player_node: CharacterBody2D = null
 var _scene_root: Node = null
 var _drawer: Node2D = null
-var _face_dir: float = -1.0  # face left by default for scarecrows on the right of map
+var _face_dir: float = -1.0
 var _hurt_t: float = 0.0
+var _alerted_by_sight: bool = false
+var _forced_chase_until: float = 0.0
 
 func _ready() -> void:
 	_spawn_x = global_position.x
-	# grab nodes using fixed scene structure of V01_InputCollisionTest
+	if not is_in_group(GROUP_ENEMY):
+		add_to_group(GROUP_ENEMY)
 	if get_tree().current_scene:
 		_scene_root = get_tree().current_scene
 		var w: Node = _scene_root.get_node_or_null("World")
 		if w and w.has_node("Player"):
 			_player_node = w.get_node("Player")
 	_drawer = get_node_or_null("Drawer")
-	# physics settings: Layer 2=Enemy; mask 1=Player + 4=Terrain
 	collision_layer = 2
 	collision_mask = 1 | 4
 
@@ -54,10 +55,11 @@ func take_damage(dmg: int) -> void:
 		await get_tree().create_timer(0.18).timeout
 		if is_instance_valid(_drawer):
 			_drawer.modulate = Color.WHITE
-	# pushback (knockback)
+	_forced_chase_until = Time.get_ticks_msec() + 3500
 	if _player_node:
 		var dir := Vector2.RIGHT if global_position.x > _player_node.global_position.x else Vector2.LEFT
 		velocity += dir * 90.0
+		_call_ally_alerts(_player_node.global_position)
 	if hp <= 0:
 		hp = 0
 		died.emit()
@@ -68,22 +70,30 @@ func _physics_process(delta: float) -> void:
 		_hurt_t = max(0.0, _hurt_t - delta)
 	if _attack_cd > 0.0:
 		_attack_cd = max(0.0, _attack_cd - delta)
-	# ---- 1. find target (player) & compute distance ----
 	var target_pos: Vector2 = global_position
 	var dist_x: float = 9999.0
 	var dist: float = 9999.0
-	if _player_node and is_instance_valid(_player_node):
+	var player_alive := _player_node and is_instance_valid(_player_node)
+	if player_alive:
 		target_pos = _player_node.global_position
 		dist_x = target_pos.x - global_position.x
 		dist = global_position.distance_to(target_pos)
-	# ---- 2. state switch ----
-	if dist < ATTACK_DIST and abs(target_pos.y - global_position.y) < 22.0:
+	var forced_chase := Time.get_ticks_msec() < _forced_chase_until
+	var in_attack_range := dist < ATTACK_DIST and abs(target_pos.y - global_position.y) < 22.0
+	var in_chase_range := dist < CHASE_DIST or forced_chase
+	var prev_state := _state
+	if in_attack_range:
 		_state = "attack"
-	elif dist < CHASE_DIST:
+	elif in_chase_range:
+		if prev_state == "patrol":
+			_trigger_sight_alert(target_pos)
 		_state = "chase"
 	else:
-		_state = "patrol"
-	# ---- 3. compute velocity by state ----
+		if forced_chase:
+			_state = "chase"
+		else:
+			_state = "patrol"
+			_alerted_by_sight = false
 	var move_x: float = 0.0
 	match _state:
 		"patrol":
@@ -95,30 +105,57 @@ func _physics_process(delta: float) -> void:
 			_face_dir = _patrol_dir
 		"chase":
 			var chase_dir: float = 1.0 if dist_x > 0.0 else -1.0
+			if not player_alive:
+				chase_dir = _patrol_dir
 			move_x = chase_dir * CHASE_SPD
 			_face_dir = chase_dir
 		"attack":
-			# face player, stop movement
 			_face_dir = 1.0 if dist_x >= 0.0 else -1.0
 			move_x = 0.0
 			if _attack_cd <= 0.0:
 				_do_attack()
 	velocity.x = move_x
-	velocity.y += 1100.0 * delta  # gravity
+	velocity.y += 1100.0 * delta
 	velocity.y = min(velocity.y, 900.0)
-	# mirror drawer sprite
 	if _drawer:
 		_drawer.scale.x = 1.0 if _face_dir >= 0.0 else -1.0
 	move_and_slide()
 	velocity.x = move_toward(velocity.x, 0.0, 300.0 * delta)
 
+func _trigger_sight_alert(target_pos: Vector2) -> void:
+	if not _alerted_by_sight:
+		_alerted_by_sight = true
+		if _drawer and _drawer.has_method("show_exclamation"):
+			_drawer.show_exclamation(0.9)
+		_call_ally_alerts(target_pos)
+
+func _call_ally_alerts(player_pos: Vector2) -> void:
+	if not is_in_group(GROUP_ENEMY):
+		return
+	var src_pos: Vector2 = global_position
+	var recipients := get_tree().get_nodes_in_group(GROUP_ENEMY)
+	for n in recipients:
+		if n == self or not is_instance_valid(n):
+			continue
+		if n.has_method("_receive_ally_alert"):
+			n.call("_receive_ally_alert", src_pos, player_pos)
+
+func _receive_ally_alert(source_pos: Vector2, player_pos: Vector2) -> void:
+	if not is_instance_valid(self):
+		return
+	var d := global_position.distance_to(source_pos)
+	if d <= ALERT_DIST:
+		_forced_chase_until = Time.get_ticks_msec() + 2500
+		if _drawer and _drawer.has_method("show_exclamation") and _state == "patrol":
+			_drawer.show_exclamation(0.7)
+
 func _do_attack() -> void:
 	_attack_cd = ATTACK_CD
-	# Call scene root damage_player(ATK) — scene must implement this method
+	if _drawer and _drawer.has_method("set_sword_slash"):
+		_drawer.set_sword_slash(0.22)
 	if _scene_root and _scene_root.has_method("damage_player"):
 		_scene_root.call("damage_player", ATK)
 	hited_someone.emit(ATK)
-	# visual tell: drawer shake briefly via modulate (light red pulse)
 	if _drawer:
 		_drawer.modulate = Color(1.1, 0.8, 0.2, 1.0)
 		await get_tree().create_timer(0.15).timeout

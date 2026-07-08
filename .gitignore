@@ -1,17 +1,34 @@
-# Godot 4.x
+# Godot 4.x auto-generated UID files
+*.uid
+
+# Godot 4.x project data / shader cache / editor state
 .godot/
-export_*/
-*.translation_backup
 
-# OS
-Thumbs.db
+# Godot import artifacts
+.import/
+import/
+*.import
+
+# Godot export files
+*.translation
+*.so
+
+# Windows / macOS artifacts
 .DS_Store
+Thumbs.db
 
-# Temp / Logs
-*.tmp
-*.log
-
-# IDE
+# IDE / editor
 .vscode/
 .idea/
 *.swp
+*.swo
+
+# User maps that should be generated at runtime (kept for built-in only)
+UserMaps/
+
+# Local Godot editor settings
+editor_settings-*.tres
+
+# Windows PowerShell / cmd temp files
+*.tmp
+*.bak
