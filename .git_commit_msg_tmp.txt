@@ -1,0 +1,17 @@
+fix(cmd/v0.2): --path dir level off-by-one: need two levels up (v0.2 -> cmd -> project root)
+
+- root cause: previous v0.2 scripts used only one level up: %~dp0\..
+  resolved to D:\learnning\game1\cmd which has NO project.godot, so Godot
+  silently fell back to user's most-recently-opened project D:/learnning/godot/ex1
+  and reported a TOTALLY UNRELATED syntax error from ex1/project.godot:8 "Unexpected identifier 'landscape'"
+- fix: all three v0.2 scripts now:
+    set CMD_DIR=%~dp0 ; pushd %CMD_DIR%\..\.. ; set PROJ_ABS=%CD% ; popd
+  then pass --path "%PROJ_ABS%" (absolute path, no ".." segments) everywhere
+- added HARD PRE-FLIGHT CHECK: if project.godot not under PROJ_ABS, exit /b 2
+  immediately and print CMD_DIR / PROJ_ABS for debugging. This 100% prevents
+  Godot's "silent fallback to last recent project" footgun.
+- 03-自动化验收 phase 1/3 file checks now use "%PROJ_ABS%\%%~f" absolute path
+  concat instead of relying on current working directory
+- re-validated: 3 scripts keep nonAsciiBytes=0 (encoding fix from last commit)
+- cmd/v0.1 scripts: no changes needed (already correct two-level-up path +
+  already have project.godot exists check)
