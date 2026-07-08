@@ -11,6 +11,7 @@ extends Control
 @onready var btn_tinput: Button = $VBoxContainer/HSep2/BtnTInput
 @onready var btn_tdamage: Button = $VBoxContainer/HSep2/BtnTDamage
 @onready var btn_fsmdemo: Button = $VBoxContainer/HSep2/BtnFsmDemo
+@onready var btn_playerdemo: Button = $VBoxContainer/HSep2/BtnPlayerDemo
 @onready var btn_quit: Button = $VBoxContainer/BtnQuit
 @onready var lbl_log: Label = $VBoxContainer/LblLog
 
@@ -41,8 +42,12 @@ func _ready() -> void:
 		AppendLog("⚔ V0.3c FSM 演示：CharacterBase 8状态骨架 + take_damage接入CDC（稻草人HP条/状态切换）")
 		AppendLog("   操作步骤：手册附录B — 3步看出IDLE↔HURT↔DEAD 状态变化 + 橙按钮=暴击黄字")
 		get_tree().change_scene_to_file("res://scenes/test/V03c_FsmDemo.tscn"))
+	btn_playerdemo.pressed.connect(func():
+		AppendLog("⚙ V0.3d 玩家可操作演示：键盘A/D跑·Space双跳·J3连击·K举盾·Shift冲刺·1/2/3切武器")
+		AppendLog("   操作步骤：手册附录C — 6步看出全部10状态+HP/体力条+武器切换真实变化")
+		get_tree().change_scene_to_file("res://scenes/test/V03d_PlayerDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
-	AppendLog("> 进入主菜单（V0.3c），测试区 6 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c)~")
+	AppendLog("> 进入主菜单（V0.3d），测试区 7 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c) + 绿(V0.3d玩家演示)~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")
 	InputBus.PausePressed.connect(func(): AppendLog("⏸ InputBus.PausePressed 信号触发（Esc/Start）"))
 

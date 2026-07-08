@@ -39,11 +39,13 @@ enum FSMState {
 	RUN,       # 1  左右移动
 	JUMP,      # 2  跳跃上升/下落
 	ATTACK1,   # 3  一段攻击
-	ATTACK2,   # 4  二段连击（V0.3d 玩家才用；V0.3c 仅保留坑位）
+	ATTACK2,   # 4  二段连击（V0.3d 玩家实装）
 	ATTACK3,   # 5  三段连击
 	HURT,      # 6  受伤硬直
 	BLOCK,     # 7  举盾格挡
-	DEAD       # 8  死亡（自锁）
+	DEAD,      # 8  死亡（自锁）
+	DOUBLEJUMP,# 9  V0.3d 新增：二段跳上升/下落
+	DASH       # 10 V0.3d 新增：冲刺位移+无敌帧
 }
 
 # ========= V0.2 旧字段（全部保留，一字不动顺序/类型） =========
@@ -68,19 +70,25 @@ var prev_state: int = FSMState.IDLE
 var defense: int = DEFAULT_DEFENSE
 var max_stamina: int = DEFAULT_MAX_STAMINA
 var stamina: int = DEFAULT_MAX_STAMINA
-var no_die: bool = false   # Dummy 木桩专用：hp 到 0 不切 DEAD，重置为 1
+var no_die: bool = false
+var move_speed: float = 260.0
+var jump_force: float = -520.0
+var gravity: float = 1800.0
+var weapon: Dictionary = {}
 
 # FSM 合法跳转表（索引 = From 状态；数组元素 = 允许的 To 状态）
 var _legal_transition: Dictionary = {
-	FSMState.IDLE:    [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.ATTACK1, FSMState.HURT, FSMState.BLOCK, FSMState.DEAD],
-	FSMState.RUN:     [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.ATTACK1, FSMState.HURT, FSMState.BLOCK, FSMState.DEAD],
-	FSMState.JUMP:    [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.ATTACK1, FSMState.HURT, FSMState.DEAD],
+	FSMState.IDLE:    [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.ATTACK1, FSMState.HURT, FSMState.BLOCK, FSMState.DEAD, FSMState.DASH],
+	FSMState.RUN:     [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.ATTACK1, FSMState.HURT, FSMState.BLOCK, FSMState.DEAD, FSMState.DASH],
+	FSMState.JUMP:    [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.ATTACK1, FSMState.HURT, FSMState.DEAD, FSMState.DOUBLEJUMP, FSMState.DASH],
 	FSMState.ATTACK1: [FSMState.ATTACK1, FSMState.ATTACK2, FSMState.HURT, FSMState.DEAD],
 	FSMState.ATTACK2: [FSMState.ATTACK2, FSMState.ATTACK3, FSMState.HURT, FSMState.DEAD],
 	FSMState.ATTACK3: [FSMState.IDLE, FSMState.ATTACK3, FSMState.HURT, FSMState.DEAD],
 	FSMState.HURT:    [FSMState.IDLE, FSMState.HURT, FSMState.DEAD],
-	FSMState.BLOCK:   [FSMState.IDLE, FSMState.BLOCK, FSMState.HURT, FSMState.DEAD],
-	FSMState.DEAD:    [FSMState.DEAD]
+	FSMState.BLOCK:   [FSMState.IDLE, FSMState.BLOCK, FSMState.HURT, FSMState.DEAD, FSMState.DASH],
+	FSMState.DEAD:    [FSMState.DEAD],
+	FSMState.DOUBLEJUMP: [FSMState.IDLE, FSMState.RUN, FSMState.HURT, FSMState.DEAD],
+	FSMState.DASH:    [FSMState.IDLE, FSMState.RUN, FSMState.JUMP, FSMState.HURT, FSMState.DEAD]
 }
 
 # ========= V0.3c 新增：安全 _autoload 工具函数（杜绝 Engine.get_singleton） =========
@@ -102,7 +110,7 @@ func _ready() -> void:
 func change_state(to: int) -> Error:
 	if state == FSMState.DEAD and to != FSMState.DEAD:
 		return ERR_DOES_NOT_EXIST
-	if to < 0 or to > FSMState.DEAD:
+	if to < 0 or to > FSMState.DASH:
 		return ERR_INVALID_PARAMETER
 	if not _legal_transition.has(state):
 		return ERR_INVALID_PARAMETER
@@ -277,14 +285,22 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if hitstun > 0.0:
 		hitstun = max(0.0, hitstun - delta)
-		# V0.3c：HURT 硬直结束后自动回到 IDLE（状态机闭环）
 		if hitstun <= 0.0 and state == FSMState.HURT:
 			change_state(FSMState.IDLE)
-	# V0.3c：Stamina 恢复（不死亡 / 非硬直 / 非 DEAD 时每秒回复）
 	if not is_dead and hitstun <= 0.0 and state != FSMState.DEAD and max_stamina > 0:
 		var before: int = stamina
 		stamina = clamp(int(float(stamina) + _STAMINA_REGEN_PER_SEC * delta), 0, max_stamina)
 		if stamina != before:
 			stats_changed.emit()
-	# 子类 override 实现具体移动/战斗逻辑（务必 super._physics_process(delta) 以保留 FSM/Stamina 工作）
+
+func regenerate_stamina(delta: float, is_blocking: bool = false) -> void:
+	if is_dead or state == FSMState.DEAD or max_stamina <= 0:
+		return
+	var regen_rate: float = _STAMINA_REGEN_PER_SEC
+	if is_blocking:
+		regen_rate = -10.0
+	var before: int = stamina
+	stamina = clamp(int(float(stamina) + regen_rate * delta), 0, max_stamina)
+	if stamina != before:
+		stats_changed.emit()
 

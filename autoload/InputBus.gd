@@ -1,7 +1,4 @@
 extends Node
-## 输入总线（Autoload单例，Node名：InputBus，避免和Godot内置Input重名）
-## 所有玩家代码只监听这些信号，不直接读物理按键
-
 signal MoveLeftPressed()
 signal MoveRightPressed()
 signal JumpPressed()
@@ -12,18 +9,19 @@ signal BlockPressed()
 signal BlockReleased()
 signal InteractPressed()
 signal PausePressed()
+signal AxisChanged(h_axis: float, v_axis: float)
+signal WeaponChanged(slot: int)
 
 var blockStrength: float = 0.0
 var moveAxis: float = 0.0
 var _block_strength_prev: float = 0.0
+var _last_axis_h: float = 0.0
 const BLOCK_THRESHOLD: float = 0.35
 
 func _process(_delta: float) -> void:
 	moveAxis = Input.get_axis("move_left", "move_right")
 	var st: float = clamp(Input.get_action_strength("block"), 0.0, 1.0)
 	blockStrength = st
-	# 边沿检测兜底（双保险）：扳机轴驱动差异下 unhandled_input 可能漏事件
-	# 仅当 is_action_pressed/released 没触发到的情况下补偿发射
 	if _block_strength_prev < BLOCK_THRESHOLD and st >= BLOCK_THRESHOLD:
 		if not Input.is_action_just_pressed("block"):
 			BlockPressed.emit()
@@ -31,6 +29,10 @@ func _process(_delta: float) -> void:
 		if not Input.is_action_just_released("block"):
 			BlockReleased.emit()
 	_block_strength_prev = st
+	var v_axis: float = 0.0
+	if abs(moveAxis - _last_axis_h) > 0.001:
+		AxisChanged.emit(moveAxis, v_axis)
+		_last_axis_h = moveAxis
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("jump"): JumpPressed.emit()
@@ -43,6 +45,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"): PausePressed.emit()
 	if event.is_action_pressed("move_left"): MoveLeftPressed.emit()
 	if event.is_action_pressed("move_right"): MoveRightPressed.emit()
+	if event.is_action_pressed("weapon_1"): WeaponChanged.emit(1)
+	if event.is_action_pressed("weapon_2"): WeaponChanged.emit(2)
+	if event.is_action_pressed("weapon_3"): WeaponChanged.emit(3)
 
 func IsJumpHeld() -> bool: return Input.is_action_pressed("jump")
 func IsBlockHeld() -> bool: return blockStrength >= BLOCK_THRESHOLD

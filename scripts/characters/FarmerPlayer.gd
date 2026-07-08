@@ -5,21 +5,28 @@ class_name FarmerPlayer
 
 func _ready() -> void:
 	super._ready()
-	id_key = "player_farmer"
-	display_name = ConfigManager.cfg_get("player.farmer.display_name", "布衣农夫 John") if ConfigManager else "布衣农夫 John"
-	max_hp = int(ConfigManager.cfg_get("player.farmer.max_hp", 100)) if ConfigManager else 100
+	character_id = "player_farmer"
+	var cfg_mgr: Node = _autoload("ConfigManager")
+	var has_cfg: bool = cfg_mgr != null and cfg_mgr.has_method("cfg_get")
+	display_name = str(cfg_mgr.cfg_get("player.farmer.display_name", "布衣农夫 John")) if has_cfg else "布衣农夫 John"
+	max_hp = int(cfg_mgr.cfg_get("player.farmer.max_hp", 100)) if has_cfg else 100
 	hp = max_hp
-	max_stamina = float(ConfigManager.cfg_get("player.farmer.max_stamina", 100)) if ConfigManager else 100.0
+	max_stamina = int(cfg_mgr.cfg_get("player.farmer.max_stamina", 100)) if has_cfg else 100
 	stamina = max_stamina
-	stamina_regen_per_sec = float(ConfigManager.cfg_get("player.farmer.stamina_regen_per_sec", 18)) if ConfigManager else 18.0
-	base_atk = int(ConfigManager.cfg_get("player.farmer.base_atk", 8)) if ConfigManager else 8
-	base_def = int(ConfigManager.cfg_get("player.farmer.base_def", 2)) if ConfigManager else 2
-	move_speed = float(ConfigManager.cfg_get("player.farmer.move_speed", 260)) if ConfigManager else 260.0
-	jump_force = float(ConfigManager.cfg_get("player.farmer.jump_force", -520)) if ConfigManager else -520.0
-	gravity = float(ConfigManager.cfg_get("physics.gravity", 1800)) if ConfigManager else 1800.0
-	weapon_defs = ConfigManager.cfg_get("player.farmer.weapons", {}) if ConfigManager else {}
-	attack_chain_cfg = ConfigManager.cfg_get("player.farmer.attack_chain", []) if ConfigManager else []
-	var def_wep: String = str(ConfigManager.cfg_get("player.farmer.default_weapon", "axe")) if ConfigManager else "axe"
+	atk = int(cfg_mgr.cfg_get("player.farmer.base_atk", 8)) if has_cfg else 8
+	defense = int(cfg_mgr.cfg_get("player.farmer.base_def", 2)) if has_cfg else 2
+	move_speed = float(cfg_mgr.cfg_get("player.farmer.move_speed", 260)) if has_cfg else 260.0
+	jump_force = float(cfg_mgr.cfg_get("player.farmer.jump_force", -520)) if has_cfg else -520.0
+	gravity = float(cfg_mgr.cfg_get("physics.gravity", 1800)) if has_cfg else 1800.0
+	weapon_defs = cfg_mgr.cfg_get("player.farmer.weapons", {}) if has_cfg else {}
+	if weapon_defs.is_empty():
+		weapon_defs = {
+			"fist": {"atk_mult": 1.0, "range": 36.0, "break_shield": false},
+			"axe":  {"atk_mult": 1.3, "range": 46.0, "break_shield": true},
+			"bow":  {"atk_mult": 0.9, "range": 160.0, "break_shield": false}
+		}
+	attack_chain_cfg = cfg_mgr.cfg_get("player.farmer.attack_chain", []) if has_cfg else []
+	var def_wep: String = str(cfg_mgr.cfg_get("player.farmer.default_weapon", "axe")) if has_cfg else "axe"
 	if weapon_defs.has(def_wep):
 		current_weapon_id = def_wep
 		weapon = weapon_defs[def_wep]
@@ -61,7 +68,7 @@ func _draw() -> void:
 		_:
 			draw_line(Vector2(12 * facing, -4), Vector2(22 * facing, 0), Color(0.6,0.6,0.6), 2.5)
 	# BLOCK姿态: 前盾
-	if state == _CE.BaseState.BLOCK:
+	if state == FSMState.BLOCK:
 		var p := PackedVector2Array([
 			Vector2(18 * facing, -22), Vector2(28 * facing, -26),
 			Vector2(28 * facing, 6), Vector2(18 * facing, 2)])
