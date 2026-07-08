@@ -1,20 +1,19 @@
 @echo off
-chcp 65001 > nul
 setlocal
 set "GODOT=D:\tools\game\Godot_v4.6.2\Godot_v4.6.2-stable_win64.exe"
 set "PROJ=%~dp0\.."
 if not exist "%GODOT%" (
-  echo [03-自动化验收V0.2] ❌ 找不到 Godot: %GODOT%
+  echo [03-AutoAcceptV0.2][ERROR] Godot not found: %GODOT%
   exit /b 1
 )
 pushd "%PROJ%"
 set "PROJ_ABS=%CD%"
 echo.
-echo ==========================================================
-echo   V0.2 迭代2 —— 自动化验收 (Headless)
-echo ==========================================================
+echo ============================================================
+echo   V0.2 AUTOMATIC ACCEPTANCE TEST (Headless, 4 phases)
+echo ============================================================
 echo.
-echo [Phase 1/4] 核心：场景 / 脚本 / 模板 / Schema 文件存在性检查
+echo [Phase 1/4] Existence check - core scenes/scripts/templates/schemas
 set "MISSING="
 for %%f in (
   "scenes\editor\EditorMain.tscn"
@@ -37,28 +36,29 @@ for %%f in (
   "scenes\workshop\templates\arena.map.json"
 ) do (
   if not exist %%f (
-    echo   [MISSING] %%f
+    echo   [MISSING] %%~f
     set "MISSING=1"
   ) else (
-    echo   [OK] %%f
+    echo   [ OK ] %%~f
   )
 )
 if defined MISSING (
   echo.
-  echo [Phase 1/4] ❌ 存在缺失文件，验收终止。
-  popd & exit /b 2
+  echo [Phase 1/4][FAIL] Missing critical files. Aborting.
+  popd
+  exit /b 2
 )
-echo [Phase 1/4] ✅ 通过。
+echo [Phase 1/4][PASS]
 echo.
-echo [Phase 2/4] 地图 JSON Schema 校验：3 张官方模板 + Validator 规则
+echo [Phase 2/4] MapSchemaValidator on 3 built-in templates (empty/farm/arena)
 "%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/editor/MapSchemaValidatorHeadless.gd
 set E1=%ERRORLEVEL%
 echo   [E1=%E1%]
 echo.
-echo [Phase 3/4] Headless 自动化测试（V01 输入/碰撞 + 武器/拾取/小怪 回归）
+echo [Phase 3/4] V0.1 regression - Input/Collision/Weapon/Pickup/SmallMobs (Headless if test scene exists)
 set "RT=scenes\test\V01_InputRuntimeTest.tscn"
 if not exist "%RT%" (
-  echo   [SKIP] 测试场景未找到：%RT%
+  echo   [SKIP] Test scene not present: %RT%
   set E2=0
 ) else (
   "%GODOT%" --no-window --headless --path "%PROJ_ABS%" "%RT%"
@@ -66,17 +66,21 @@ if not exist "%RT%" (
   echo   [E2=%E2%]
 )
 echo.
-echo [Phase 4/4] 地图保存-加载链路烟雾验证：Serializer 构造 farm 模板 → 写临时文件 → Validator校验 → MapLoader 实例化
+echo [Phase 4/4] Save-Load smoke - build dict -> save temp -> validate -> MapLoader instantiate
 "%GODOT%" --no-window --headless --path "%PROJ_ABS%" -s res://scripts/editor/SmokeTestMapIO.gd
 set E3=%ERRORLEVEL%
 echo   [E3=%E3%]
 echo.
 set /A TOTAL=E1+E2+E3
-echo ==========================================================
+echo ============================================================
 if %TOTAL% EQU 0 (
-  echo  ✅ V0.2 全部 4 阶段通过。
-  popd & endlocal & exit /b 0
+  echo  [PASS] V0.2 - All 4 phases OK.
+  popd
+  endlocal
+  exit /b 0
 ) else (
-  echo  ❌ V0.2 存在失败，子阶段 ExitCode: E1=%E1%  E2=%E2%  E3=%E3%
-  popd & endlocal & exit /b %TOTAL%
+  echo  [FAIL] V0.2 - Some phases failed. Sub-codes: E1=%E1%  E2=%E2%  E3=%E3%
+  popd
+  endlocal
+  exit /b %TOTAL%
 )
