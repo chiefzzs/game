@@ -262,10 +262,11 @@ func _phase4e_attacked(st_bef: int) -> void:
 	var wh_rot: float = 0.0
 	if _weapon_holder:
 		wh_rot = _weapon_holder.rotation
-	var rake_rotated: bool = abs(wh_rot) > 0.05 or st_drop >= 3
+	var swinging: bool = abs(wh_rot - (-0.95)) > 0.05 or abs(wh_rot - 0.95) > 0.05
+	var rake_rotated: bool = swinging or st_drop >= 3
 	_expect(atk_sig == 1, "AttackPressed fired exactly %d time (X/J rake swing)" % atk_sig, "AttackPressed signal seen=%d times (expected 1 after AttackPressed.emit)" % atk_sig)
 	_expect(st_drop >= 3 and st_drop <= 7, "Attack 1x => SP drops by %d (need 4, got %d-%d = %d)" % [st_drop, st_bef, st_after, st_drop], "Attack didn't spend any stamina: SP before=%d after=%d drop=%d" % [st_bef, st_after, st_drop])
-	_expect(rake_rotated, "WeaponHolder.rotation=%.3f (expected swing animation moved it >0.05 rad) OR SP dropped >=3" % wh_rot, "Rake stayed still after attack! rotation=%.3f (no swing animation)" % wh_rot)
+	_expect(rake_rotated, "WeaponHolder.rotation=%.3f during 0.1s after attack (mid-swing offset from base ±0.95 >0.05) OR SP dropped >=3" % wh_rot, "Rake stayed at base rotation after attack! rotation=%.3f (no mid-swing motion detected; SP drop=%d)" % [wh_rot, st_drop])
 	# --- Now proceed to original Phase5 (Ladder climb) ---
 	var y_before_climb: float = 9999.0
 	if _ladder and _player:

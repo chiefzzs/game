@@ -39,6 +39,8 @@ var _attack_cd: float = 0.0
 const ATTACK_COOLDOWN: float = 0.32
 var _attack_tween: Tween = null
 const ATTACK_STAMINA_COST: int = 4
+const WEAPON_BASE_ROT: float = -0.95
+const WEAPON_HOLD_X_RIGHT: float = 14.0
 
 var _hp_max: int = 100
 var _hp: int = 100
@@ -219,18 +221,25 @@ func _on_attack() -> void:
 	_attack_cd = ATTACK_COOLDOWN
 	_stamina_recovery_cd = STAMINA_RECOVERY_COOLDOWN
 	hud("[ATTACK] Rake swing!  (-%d SP, CD=%.2fs)" % [ATTACK_STAMINA_COST, ATTACK_COOLDOWN])
-	# 挥击动画：从上方(+50°)快速横扫到前方下方(-60°)，再弹回休息位(0°)
+	# 挥击动画：围绕当前基准角(WEAPON_BASE_ROT*朝向)做举高→横扫→回弹→归位
+	# 耙子始终保持拾取时的样貌（形状和地上钉耙一模一样），动画只是Node2D旋转
 	if weapon_holder:
 		if _attack_tween and _attack_tween.is_valid():
 			_attack_tween.kill()
-		weapon_holder.rotation = 0.9  # 约 51.6° 起始举高位置
+		var fw: float = 1.0 if drawer and drawer.scale.x >= 0.0 else -1.0
+		var base_rot: float = WEAPON_BASE_ROT * fw
+		# lift up (raise tines high above shoulder)
+		weapon_holder.rotation = base_rot + 1.05
 		_attack_tween = create_tween()
 		_attack_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		_attack_tween.tween_property(weapon_holder, "rotation", -1.15, 0.11)  # ~-65.9° 挥击
+		# 0.11s horizontal swing to forward-down strike (tines point at enemy in front)
+		_attack_tween.tween_property(weapon_holder, "rotation", base_rot - 1.25, 0.11)
 		_attack_tween.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-		_attack_tween.tween_property(weapon_holder, "rotation", -0.25, 0.20)  # 回正
+		# elastic recoil (flex back)
+		_attack_tween.tween_property(weapon_holder, "rotation", base_rot - 0.3, 0.20)
 		_attack_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_attack_tween.tween_property(weapon_holder, "rotation", 0.0, 0.08)  # 精确归位
+		# settle exactly to base rotation (rake look = identical to pickup shape)
+		_attack_tween.tween_property(weapon_holder, "rotation", base_rot, 0.08)
 
 func _update_aura_color() -> void:
 	if not block_aura:
@@ -261,12 +270,16 @@ func _pickup_one(pickup: Node) -> void:
 			hud("[AUTO-PICKUP] +1 Potion (total %d)" % _inventory_pot)
 		"weapon":
 			if _has_weapon:
-				hud("[AUTO-PICKUP] skip weapon (already equipped)")
+				hud("[PICKUP] weapon already equipped (Rake)")
 				return
 			_has_weapon = true
 			if weapon_holder:
 				weapon_holder.visible = true
-				weapon_holder.scale.x = drawer.scale.x
+				var f: float = 1.0 if drawer.scale.x >= 0.0 else -1.0
+				weapon_holder.scale.x = f
+				weapon_holder.position.x = WEAPON_HOLD_X_RIGHT * f
+				weapon_holder.position.y = 6.0
+				weapon_holder.rotation = WEAPON_BASE_ROT * f
 			hud("[AUTO-PICKUP] + Farming Rake!  Press X / J to attack")
 		_:
 			hud("[AUTO-PICKUP] unknown kind=%s" % kind)
@@ -357,8 +370,13 @@ func _physics_process(delta: float) -> void:
 		if shield:
 			shield.position.x = 18.0 if drawer.scale.x > 0.0 else -18.0
 		if weapon_holder:
-			weapon_holder.scale.x = drawer.scale.x
-			weapon_holder.position.x = 6.0 if drawer.scale.x > 0.0 else -6.0
+			var fw: float = 1.0 if drawer.scale.x >= 0.0 else -1.0
+			weapon_holder.scale.x = fw
+			weapon_holder.position.x = WEAPON_HOLD_X_RIGHT * fw
+			weapon_holder.position.y = 6.0
+			# If attack cooldown, do not clobber mid-swing rotation (attack tweener owns it)
+			if _attack_cd <= 0.0:
+				weapon_holder.rotation = WEAPON_BASE_ROT * fw
 	if _attack_cd > 0.0:
 		_attack_cd = max(0.0, _attack_cd - delta)
 	# block 持续消耗体力 + 体力耗尽自动解除格挡
