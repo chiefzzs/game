@@ -1,6 +1,10 @@
 ; Engine configuration file.
-; Godot 4.6.2 - Medieval Rebellion (V0.3 Combat Module)
-; Iteration 3: 角色战斗实装
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -28,7 +32,10 @@ AudioBus="*res://autoload/AudioBus.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
+
+[gdscript]
+
+warnings/treat_warnings_as_errors=false
 
 [input]
 
@@ -104,17 +111,11 @@ weapon_3={
 
 [physics]
 
-common/physics_fps=60
 common/physics_interpolation=true
+common/physics_fps=60
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.176471, 0.203922, 0.266667, 1)
 2d/snap/snap_2d_transforms_to_pixel=true
-textures/canvas_textures/default_texture_filter=1
-
-[gdscript]
-
-warnings/treat_warnings_as_errors=false

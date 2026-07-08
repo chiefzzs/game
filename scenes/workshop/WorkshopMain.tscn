@@ -1,0 +1,226 @@
+[gd_scene load_steps=3 format=3 uid="uid://workshop_main_v02"]
+
+[ext_resource type="Script" path="res://scripts/editor/WorkshopMain.gd" id="1_ws"]
+
+[sub_resource type="StyleBoxFlat" id="SB_bg"]
+bg_color = Color(0.06, 0.09, 0.12, 1)
+
+[node name="WorkshopMain" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("SB_bg")
+script = ExtResource("1_ws")
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 62.0
+grow_horizontal = 2
+theme_override_constants/separation = 14
+
+[node name="Pad" type="Control" parent="TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 0)
+
+[node name="BackBtn" type="Button" parent="TopBar"]
+layout_mode = 2
+text = "⬅ 返回主菜单"
+custom_minimum_size = Vector2(170, 44)
+theme_override_font_sizes/font_size = 16
+
+[node name="Sep1" type="Label" parent="TopBar"]
+layout_mode = 2
+text = "  |  "
+theme_override_colors/font_color = Color(0.5, 0.55, 0.6, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="TitleLabel" type="Label" parent="TopBar"]
+layout_mode = 2
+text = "⚒  地图工坊   Map Workshop  v0.2"
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 26
+
+[node name="Spacer" type="Control" parent="TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RefreshBtn" type="Button" parent="TopBar"]
+layout_mode = 2
+text = "🔄 刷新目录"
+custom_minimum_size = Vector2(140, 44)
+theme_override_font_sizes/font_size = 15
+
+[node name="Pad2" type="Control" parent="TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 0)
+
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 62.0
+offset_right = 0.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="Pad1" type="Control" parent="MainVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 18)
+
+[node name="Buttons" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 28
+
+[node name="BtnNew" type="Button" parent="MainVBox/Buttons"]
+layout_mode = 2
+text = "📄  新建空地图"
+custom_minimum_size = Vector2(230, 80)
+theme_override_font_sizes/font_size = 20
+
+[node name="BtnEdit" type="Button" parent="MainVBox/Buttons"]
+layout_mode = 2
+text = "📂  编辑已有地图"
+custom_minimum_size = Vector2(230, 80)
+theme_override_font_sizes/font_size = 20
+
+[node name="BtnOfficial" type="Button" parent="MainVBox/Buttons"]
+layout_mode = 2
+text = "📚  官方模板"
+custom_minimum_size = Vector2(230, 80)
+theme_override_font_sizes/font_size = 20
+
+[node name="BtnTest" type="Button" parent="MainVBox/Buttons"]
+layout_mode = 2
+text = "🎮  测试用户地图"
+custom_minimum_size = Vector2(230, 80)
+theme_override_font_sizes/font_size = 20
+
+[node name="HintRow" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PadL" type="Control" parent="MainVBox/HintRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(60, 0)
+
+[node name="HintLabel" type="Label" parent="MainVBox/HintRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "💡  用户地图目录：%APPDATA%/Godot/app_userdata/MedievalRebellion/UserMaps      （保存/另存为的地图会出现在此，可与好友互传 .map.json）"
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 2
+
+[node name="PadR" type="Control" parent="MainVBox/HintRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(60, 0)
+
+[node name="Content" type="GridContainer" parent="MainVBox"]
+layout_mode = 2
+columns = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 12
+
+[node name="UserMapsPanel" type="PanelContainer" parent="MainVBox/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="UserMapsVBox" type="VBoxContainer" parent="MainVBox/Content/UserMapsPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="UserMapsTitle" type="Label" parent="MainVBox/Content/UserMapsPanel/UserMapsVBox"]
+layout_mode = 2
+text = "🗺  用户地图（点击『📂编辑已有地图』打开第一张）"
+theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
+theme_override_font_sizes/font_size = 18
+custom_minimum_size = Vector2(0, 30)
+
+[node name="UserMapsList" type="ItemList" parent="MainVBox/Content/UserMapsPanel/UserMapsVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(500, 260)
+
+[node name="TemplatesPanel" type="PanelContainer" parent="MainVBox/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TemplatesVBox" type="VBoxContainer" parent="MainVBox/Content/TemplatesPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="TemplatesTitle" type="Label" parent="MainVBox/Content/TemplatesPanel/TemplatesVBox"]
+layout_mode = 2
+text = "📚  官方地图模板（共3张：Empty 空白 / Farm 农场 / Arena 竞技场）"
+theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
+theme_override_font_sizes/font_size = 18
+custom_minimum_size = Vector2(0, 30)
+
+[node name="Template1" type="Button" parent="MainVBox/Content/TemplatesPanel/TemplatesVBox"]
+layout_mode = 2
+text = "🧱  Empty 空白模板  ——  60×30 空画布 + 默认检查点 + 到达目标"
+custom_minimum_size = Vector2(120, 52)
+theme_override_font_sizes/font_size = 16
+
+[node name="Template2" type="Button" parent="MainVBox/Content/TemplatesPanel/TemplatesVBox"]
+layout_mode = 2
+text = "🌾  Farm 农场模板  ——  2平台 + 稻草人 + 招募农夫 + 宝箱 + 传送门 → 下一关"
+custom_minimum_size = Vector2(120, 52)
+theme_override_font_sizes/font_size = 16
+
+[node name="Template3" type="Button" parent="MainVBox/Content/TemplatesPanel/TemplatesVBox"]
+layout_mode = 2
+text = "⚔  Arena 竞技场模板  ——  BOSS骑士 + 2杂兵 + 宝箱奖励（PVE战斗关卡）"
+custom_minimum_size = Vector2(120, 52)
+theme_override_font_sizes/font_size = 16
+
+[node name="PadBottom" type="Control" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 10)
+
+[node name="StatusBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 20
+
+[node name="PadL2" type="Control" parent="StatusBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 0)
+
+[node name="Label" type="Label" parent="StatusBar"]
+layout_mode = 2
+text = "ℹ  地图工坊 v0.2 就绪   （保存/另存为的地图会出现在用户目录，可以跨机器互传 .map.json）"
+theme_override_colors/font_color = Color(0.8, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+size_flags_horizontal = 3
+
+[node name="PadR2" type="Control" parent="StatusBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(20, 0)
