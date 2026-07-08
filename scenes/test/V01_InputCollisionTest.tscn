@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://b0inputtest001"]
+[gd_scene load_steps=9 format=3 uid="uid://b0inputtest001"]
 
 [ext_resource type="Script" path="res://scenes/test/V01_InputCollisionTest.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/test/DrawPlayerSimple.gd" id="2_drawplayer"]
 [ext_resource type="Script" path="res://scenes/test/DrawGold.gd" id="3_golddraw"]
 [ext_resource type="Script" path="res://scenes/test/DrawPotion.gd" id="4_potdraw"]
 [ext_resource type="Script" path="res://scenes/test/DrawShield.gd" id="5_shielddraw"]
+[ext_resource type="Script" path="res://scenes/test/DrawRake.gd" id="6_rakedraw"]
 
 [sub_resource type="RectangleShape2D" id="RectShape_player"]
 size = Vector2(28, 48)
@@ -20,6 +21,9 @@ radius = 16.0
 
 [sub_resource type="CircleShape2D" id="CircShape_pot"]
 radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircShape_rake"]
+radius = 24.0
 
 [sub_resource type="RectangleShape2D" id="RectShape_ladder"]
 size = Vector2(50, 340)
@@ -175,6 +179,19 @@ script = ExtResource("4_potdraw")
 [node name="Coll" type="CollisionShape2D" parent="World/Potion1"]
 shape = SubResource("CircShape_pot")
 
+[node name="Rake" type="Area2D" parent="World"]
+position = Vector2(500, 810)
+collision_layer = 32
+collision_mask = 1
+metadata/role = "pickup"
+metadata/pickup_kind = "weapon"
+
+[node name="RakeDraw" type="Node2D" parent="World/Rake"]
+script = ExtResource("6_rakedraw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Rake"]
+shape = SubResource("CircShape_rake")
+
 [node name="Player" type="CharacterBody2D" parent="World"]
 position = Vector2(560, 800)
 collision_layer = 1
@@ -247,6 +264,14 @@ offset_top = 28.0
 offset_right = 27.0
 offset_bottom = 34.0
 color = Color(1, 1, 0.45, 1)
+
+[node name="WeaponHolder" type="Node2D" parent="World/Player"]
+position = Vector2(6, 4)
+visible = false
+
+[node name="RakeSprite" type="Node2D" parent="World/Player/WeaponHolder"]
+script = ExtResource("6_rakedraw")
+held = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player"]
 shape = SubResource("RectShape_player")

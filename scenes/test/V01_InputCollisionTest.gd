@@ -12,13 +12,14 @@ extends Node2D
 @onready var drawer: Node2D = $World/Player/Drawer
 @onready var shield: Node2D = $World/Player/Shield
 @onready var block_aura: Node2D = $World/Player/BlockAura
+@onready var weapon_holder: Node2D = $World/Player/WeaponHolder
 @onready var inv_gold: Label = $UI/Inv/GoldVal
 @onready var inv_pot: Label = $UI/Inv/PotVal
 @onready var hp_bar: ProgressBar = $UI/HealthBars/HpRow/HpBar
 @onready var hp_txt: Label = $UI/HealthBars/HpRow/HpText
 @onready var st_bar: ProgressBar = $UI/HealthBars/StRow/StBar
 @onready var st_txt: Label = $UI/HealthBars/StRow/StText
-var lines: Array[String] = ["Move:A/D | Jump:Space | Dash:K/Y | Block:Shift/LT | Pickup:E/B | Climb:W/S on ladder | Esc back"]
+var lines: Array[String] = ["Move:A/D | Jump:Space | Dash:K/Y | Block:Shift/LT | Attack:X/J(need rake) | Pickup:auto | Climb:W/S on ladder | Esc back"]
 var velocity: Vector2 = Vector2.ZERO
 var _tick: int = 0
 
@@ -30,9 +31,14 @@ var _dash_dir: float = 0.0
 var _is_blocking: bool = false
 var _inventory_gold: int = 0
 var _inventory_pot: int = 0
+var _has_weapon: bool = false
 var _nearby_pickups: Array[Node] = []
 var _is_climbing: bool = false
 var _in_ladder_area: bool = false
+var _attack_cd: float = 0.0
+const ATTACK_COOLDOWN: float = 0.32
+var _attack_tween: Tween = null
+const ATTACK_STAMINA_COST: int = 4
 
 var _hp_max: int = 100
 var _hp: int = 100
@@ -55,7 +61,7 @@ const JUMP_CUT_MULTIPLIER: float = 0.45
 
 func _ready() -> void:
 	InputBus.JumpPressed.connect(_on_jump)
-	InputBus.AttackPressed.connect(func(): hud("[OK] AttackPressed (X/J)"))
+	InputBus.AttackPressed.connect(_on_attack)
 	InputBus.DashPressed.connect(_on_dash)
 	InputBus.BlockPressed.connect(_on_block_p)
 	InputBus.BlockReleased.connect(_on_block_r)
@@ -200,6 +206,32 @@ func _on_block_r() -> void:
 		block_aura.visible = false
 	hud("[OK] BlockReleased (shield + aura OFF)")
 
+func _on_attack() -> void:
+	if not _has_weapon:
+		hud("[ATTACK] skipped (no weapon equipped, pickup the Rake first)")
+		return
+	if _attack_cd > 0.0:
+		return
+	if _stamina < ATTACK_STAMINA_COST:
+		hud("[ATTACK] skipped (need %d SP, have %d)" % [ATTACK_STAMINA_COST, _stamina])
+		return
+	spend_stamina(ATTACK_STAMINA_COST)
+	_attack_cd = ATTACK_COOLDOWN
+	_stamina_recovery_cd = STAMINA_RECOVERY_COOLDOWN
+	hud("[ATTACK] Rake swing!  (-%d SP, CD=%.2fs)" % [ATTACK_STAMINA_COST, ATTACK_COOLDOWN])
+	# 挥击动画：从上方(+50°)快速横扫到前方下方(-60°)，再弹回休息位(0°)
+	if weapon_holder:
+		if _attack_tween and _attack_tween.is_valid():
+			_attack_tween.kill()
+		weapon_holder.rotation = 0.9  # 约 51.6° 起始举高位置
+		_attack_tween = create_tween()
+		_attack_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_attack_tween.tween_property(weapon_holder, "rotation", -1.15, 0.11)  # ~-65.9° 挥击
+		_attack_tween.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		_attack_tween.tween_property(weapon_holder, "rotation", -0.25, 0.20)  # 回正
+		_attack_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_attack_tween.tween_property(weapon_holder, "rotation", 0.0, 0.08)  # 精确归位
+
 func _update_aura_color() -> void:
 	if not block_aura:
 		return
@@ -227,6 +259,15 @@ func _pickup_one(pickup: Node) -> void:
 		"potion":
 			_inventory_pot += 1
 			hud("[AUTO-PICKUP] +1 Potion (total %d)" % _inventory_pot)
+		"weapon":
+			if _has_weapon:
+				hud("[AUTO-PICKUP] skip weapon (already equipped)")
+				return
+			_has_weapon = true
+			if weapon_holder:
+				weapon_holder.visible = true
+				weapon_holder.scale.x = drawer.scale.x
+			hud("[AUTO-PICKUP] + Farming Rake!  Press X / J to attack")
 		_:
 			hud("[AUTO-PICKUP] unknown kind=%s" % kind)
 	if pickup.has_method("queue_free"):
@@ -315,6 +356,11 @@ func _physics_process(delta: float) -> void:
 		drawer.scale.x = -1.0 if InputBus.moveAxis < 0.0 else 1.0
 		if shield:
 			shield.position.x = 18.0 if drawer.scale.x > 0.0 else -18.0
+		if weapon_holder:
+			weapon_holder.scale.x = drawer.scale.x
+			weapon_holder.position.x = 6.0 if drawer.scale.x > 0.0 else -6.0
+	if _attack_cd > 0.0:
+		_attack_cd = max(0.0, _attack_cd - delta)
 	# block 持续消耗体力 + 体力耗尽自动解除格挡
 	if _is_blocking:
 		_aura_pulse_t += delta

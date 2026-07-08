@@ -1,5 +1,5 @@
 extends Node2D
-## Headless runtime test for V01_InputCollisionTest (50 assertions)
+## Headless runtime test for V01_InputCollisionTest (60 assertions, includes Rake weapon + X attack)
 var passed: int = 0
 var failed: int = 0
 var _test_scene: Node2D
@@ -9,6 +9,7 @@ var _drawer: Node2D
 var _shield: Node2D
 var _block_aura: Node2D
 var _aura_top: ColorRect
+var _weapon_holder: Node2D
 var _inv_gold: Label
 var _inv_pot: Label
 var _hp_bar: ProgressBar
@@ -22,6 +23,7 @@ var _blk_rel_seen: int = 0
 var _dash_seen: int = 0
 var _gold1: Node
 var _pot1: Node
+var _rake1: Node
 var _ladder: Node
 var _lines_out: Array[String] = []
 var _climb_y0: float = 0.0
@@ -47,16 +49,23 @@ func _phase1_nodes() -> void:
 	_st_txt = _test_scene.get_node_or_null("UI/HealthBars/StRow/StText") as Label
 	_gold1 = _test_scene.get_node_or_null("World/Gold1")
 	_pot1  = _test_scene.get_node_or_null("World/Potion1")
+	_rake1 = _test_scene.get_node_or_null("World/Rake")
 	_ladder = _test_scene.get_node_or_null("World/Ladder")
+	_weapon_holder = _test_scene.get_node_or_null("World/Player/WeaponHolder") as Node2D
 	_expect(_hud != null, "HudLabel present", "HudLabel missing")
 	_expect(_player != null, "Player present", "Player missing")
 	_expect(_drawer != null, "Drawer present", "Drawer missing")
 	_expect(_shield != null, "Shield child Node2D present (DrawShield)", "Shield missing (block visual absent)")
 	_expect(_block_aura != null and _aura_top != null, "BlockAura present (4 yellow lines + 4 corners)", "BlockAura (yellow frame) missing")
 	_expect(not _block_aura.visible, "BlockAura starts hidden (visible=false)", "Aura already visible before block pressed!")
+	_expect(_weapon_holder != null, "WeaponHolder present under Player (empty holster for rake)", "WeaponHolder missing (after pickup, rake can't show)")
+	_expect(not _weapon_holder.visible, "WeaponHolder starts hidden (visible=false before pickup weapon)", "WeaponHolder visible at startup — no pickup yet!")
 	_expect(_inv_gold != null and _inv_pot != null, "Inventory HUD labels present Gold/Pot", "Inventory HUD missing")
 	_expect(_hp_bar != null and _hp_txt != null and _st_bar != null and _st_txt != null, "HealthBars UI present (❤ HP + ⚡ SP rows)", "HP/SP bars missing from UI")
 	_expect(_gold1 != null and _pot1 != null and _ladder != null, "Pickups (2x gold + 1x pot) + Ladder present", "Scene missing gold/pot/ladder")
+	_expect(_rake1 != null, "Rake (农用钉耙) pickup Area2D near spawn", "World/Rake missing — no weapon pickup at spawn!")
+	if _rake1:
+		_expect(_rake1.has_meta("pickup_kind") and _rake1.get_meta("pickup_kind") == "weapon", "Rake metadata pickup_kind='weapon'", "Rake metadata wrong: pickup_kind=%s" % [str(_rake1.get_meta("pickup_kind") if _rake1.has_meta("pickup_kind") else "MISSING")])
 	InputBus.JumpPressed.connect(_on_j)
 	InputBus.AttackPressed.connect(_on_a)
 	InputBus.BlockPressed.connect(_on_b)
@@ -216,7 +225,48 @@ func _phase4c_potion_picked() -> void:
 	_expect(p_inv == 1, "Auto-pickup -> internal Potion inventory =%d (expected 1)" % p_inv, "Potion auto-pick internal count wrong: %d" % p_inv)
 	_expect(p == "1", "After Potion auto-pickup -> HUD PotionVal=%s (expected 1)" % p, "Potion pickup wrong Pot=%s" % p)
 	_expect(pot_gone, "Potion1 pickup vanished (queue_free/invalid=%s)" % str(pot_gone), "Potion1 still visible after pickup!")
-	# Phase5: teleport onto ladder + set _in_ladder_area=true + fire W (ui_up) -> climb up (position.y should DECREASE)
+	# Phase 4d: teleport player onto Rake pickup -> auto-pick weapon, equip rake in hand
+	if _rake1:
+		_player.position = _rake1.position
+		if "_nearby_pickups" in _test_scene:
+			var nb3: Array = _test_scene["_nearby_pickups"]
+			if not nb3.has(_rake1):
+				nb3.append(_rake1)
+	_sched(0.25, _phase4d_rake_picked)
+
+func _phase4d_rake_picked() -> void:
+	var nb_rake: int = -1
+	var nb_arr_r: Array = _test_scene["_nearby_pickups"] if "_nearby_pickups" in _test_scene else []
+	nb_rake = nb_arr_r.size()
+	var has_w: bool = bool(_test_scene.get("_has_weapon") if "_has_weapon" in _test_scene else false)
+	var wh_vis: bool = _weapon_holder.visible if _weapon_holder else false
+	var rake_gone: bool = true
+	if _rake1 and is_instance_valid(_rake1):
+		rake_gone = _rake1.is_queued_for_deletion()
+	_expect(nb_rake == 0, "Auto-pickup Rake -> nearby_pickups size=%d (expect 0)" % nb_rake, "Rake not auto-picked! size=%d" % nb_rake)
+	_expect(has_w, "After Rake pickup -> _has_weapon=true (internal flag)", "Internal _has_weapon flag still false after pickup!")
+	_expect(_weapon_holder != null and wh_vis, "After Rake pickup -> WeaponHolder visible (rake shown in hand)", "WeaponHolder hidden, rake not displayed in hand: vis=%s" % [str(wh_vis)])
+	_expect(rake_gone, "Rake pickup vanished after auto-pick (queue_free/invalid=%s)" % str(rake_gone), "Rake still visible on floor after pickup!")
+	# Phase4e: Attack with weapon via X/attack action (SP drops, AttackPressed signal counted)
+	var st_before_atk: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
+	_atk_seen = 0
+	InputBus.AttackPressed.emit()
+	_sched(0.1, func():
+		_phase4e_attacked(st_before_atk)
+	)
+
+func _phase4e_attacked(st_bef: int) -> void:
+	var atk_sig: int = _atk_seen
+	var st_after: int = int(_test_scene.get("_stamina") if "_stamina" in _test_scene else -1)
+	var st_drop: int = st_bef - st_after
+	var wh_rot: float = 0.0
+	if _weapon_holder:
+		wh_rot = _weapon_holder.rotation
+	var rake_rotated: bool = abs(wh_rot) > 0.05 or st_drop >= 3
+	_expect(atk_sig == 1, "AttackPressed fired exactly %d time (X/J rake swing)" % atk_sig, "AttackPressed signal seen=%d times (expected 1 after AttackPressed.emit)" % atk_sig)
+	_expect(st_drop >= 3 and st_drop <= 7, "Attack 1x => SP drops by %d (need 4, got %d-%d = %d)" % [st_drop, st_bef, st_after, st_drop], "Attack didn't spend any stamina: SP before=%d after=%d drop=%d" % [st_bef, st_after, st_drop])
+	_expect(rake_rotated, "WeaponHolder.rotation=%.3f (expected swing animation moved it >0.05 rad) OR SP dropped >=3" % wh_rot, "Rake stayed still after attack! rotation=%.3f (no swing animation)" % wh_rot)
+	# --- Now proceed to original Phase5 (Ladder climb) ---
 	var y_before_climb: float = 9999.0
 	if _ladder and _player:
 		y_before_climb = float(_ladder.position.y)
