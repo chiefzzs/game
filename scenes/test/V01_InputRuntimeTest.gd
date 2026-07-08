@@ -1,5 +1,5 @@
 extends Node2D
-## Headless runtime test for V01_InputCollisionTest (44 assertions)
+## Headless runtime test for V01_InputCollisionTest (50 assertions)
 var passed: int = 0
 var failed: int = 0
 var _test_scene: Node2D
@@ -18,6 +18,7 @@ var _st_txt: Label
 var _jump_seen: int = 0
 var _atk_seen: int = 0
 var _blk_seen: int = 0
+var _blk_rel_seen: int = 0
 var _dash_seen: int = 0
 var _gold1: Node
 var _pot1: Node
@@ -59,8 +60,26 @@ func _phase1_nodes() -> void:
 	InputBus.JumpPressed.connect(_on_j)
 	InputBus.AttackPressed.connect(_on_a)
 	InputBus.BlockPressed.connect(_on_b)
+	InputBus.BlockReleased.connect(_on_br)
 	InputBus.DashPressed.connect(_on_d)
-	_sched(0.15, _phase2_ready_flush)
+	# Phase 1b: Simulate LT trigger via Input.action_press (axis-style press/release), confirm signal fires EXACTLY 1 time
+	_blk_seen = 0
+	_blk_rel_seen = 0
+	Input.action_press("block", 0.7)
+	_sched(0.1, func():
+		_expect(_blk_seen == 1, "Input.action_press(block) -> BlockPressed fired 1 time (LT/RB key simulate)", "BlockPressed seen=%d times, duplicate or missing!" % _blk_seen)
+		_expect(_shield != null and _shield.visible, "After simulated LT: Shield visible=true", "Shield not visible after Input.action_press(block)")
+		_expect(_block_aura != null and _block_aura.visible, "After simulated LT: Aura (yellow frame) visible=true", "Aura not visible after Input.action_press(block)")
+		Input.action_release("block")
+	)
+	_sched(0.25, _phase1b_lt_release_done)
+
+func _phase1b_lt_release_done() -> void:
+	_expect(_blk_rel_seen == 1, "Input.action_release(block) -> BlockReleased fired 1 time", "BlockReleased seen=%d times, duplicate or missing!" % _blk_rel_seen)
+	_expect(_block_aura != null and not _block_aura.visible, "After LT release -> Aura hidden", "Aura still visible after Input.action_release(block)!")
+	_blk_seen = 0
+	_blk_rel_seen = 0
+	_sched(0.1, _phase2_ready_flush)
 
 func _phase2_ready_flush() -> void:
 	var t: String = _hud.text if _hud else ""
@@ -263,6 +282,7 @@ func _finalize() -> void:
 func _on_j() -> void: _jump_seen += 1
 func _on_a() -> void: _atk_seen += 1
 func _on_b() -> void: _blk_seen += 1
+func _on_br() -> void: _blk_rel_seen += 1
 func _on_d() -> void: _dash_seen += 1
 
 func _sched(sec: float, fn: Callable) -> void:
