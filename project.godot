@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="MedievalRebellion"
-config/description="2D横版动作：中世纪农民起义（玩家从农场出发招募同伴推翻地方官吏）"
-config/version="0.1.0"
+config/description="2D横版动作：中世纪农民起义（玩家从农场出发招募同伴推翻地方官吏）；V0.2 迭代2：地图编辑器+工坊+流程骨架版"
+config/version="0.2.0"
 run/main_scene="res://scenes/bootstrap/Main.tscn"
 config/features=PackedStringArray("4.6")
 config/icon="res://icon.svg"
@@ -28,6 +28,7 @@ Config="*res://autoload/ConfigManager.gd"
 Flags="*res://autoload/ProgressFlags.gd"
 Saves="*res://autoload/SaveSlotManager.gd"
 InputBus="*res://autoload/InputBus.gd"
+LevelFlow="*res://autoload/LevelFlowController.gd"
 
 [display]
 

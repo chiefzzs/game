@@ -1,9 +1,10 @@
 extends Control
-## V0.1 占位主菜单 - 新游戏/继续/设置/4测试场景/退出
+## V0.2 主菜单 - 新游戏/继续/设置/⚒ 地图工坊 / 4测试场景/退出
 
 @onready var btn_new: Button = $VBoxContainer/BtnNewGame
 @onready var btn_continue: Button = $VBoxContainer/BtnContinue
 @onready var btn_settings: Button = $VBoxContainer/BtnSettings
+@onready var btn_workshop: Button = $VBoxContainer/BtnWorkshop
 @onready var btn_tcfg: Button = $VBoxContainer/HSep2/BtnTConfig
 @onready var btn_tflags: Button = $VBoxContainer/HSep2/BtnTFlags
 @onready var btn_tsave: Button = $VBoxContainer/HSep2/BtnTSave
@@ -17,6 +18,7 @@ func _ready() -> void:
 	btn_new.pressed.connect(_OnNewGame)
 	btn_continue.pressed.connect(_OnContinue)
 	btn_settings.pressed.connect(_OnSettings)
+	btn_workshop.pressed.connect(_OnWorkshop)
 	btn_tcfg.pressed.connect(func():
 		AppendLog("🧪 跳转到 Config 验收测试 (F1/F2/F3/F4可切场景)")
 		get_tree().change_scene_to_file("res://scenes/test/V01_ConfigTest.tscn"))
@@ -74,3 +76,8 @@ func _OnSettings() -> void:
 	AppendLog("   还原后 bgmVolume = " + str(Config.GetPref("audio.bgmVolume")))
 	AppendLog("--- Prefs Dump ---")
 	Config.DumpAllPrefs()
+
+func _OnWorkshop() -> void:
+	AppendLog("⚒ 进入 V0.2 地图工坊 — 新建/编辑/官方模板/测试地图")
+	AppendLog("   详情见 cmd\\v0.2\\V0.2用户手册.md 第二节 / 第三节")
+	get_tree().change_scene_to_file("res://scenes/workshop/WorkshopMain.tscn")

@@ -30,7 +30,7 @@ theme_override_constants/separation = 20
 
 [node name="TitleLbl" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "中世纪农民起义 V0.1
+text = "中世纪农民起义 V0.2
 ─────────────"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.96, 0.91, 0.79, 1)
@@ -54,12 +54,18 @@ custom_minimum_size = Vector2(400, 60)
 text = "⚙️ 测试设置（读/写/重置 Prefs）"
 theme_override_font_sizes/font_size = 22
 
+[node name="BtnWorkshop" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(400, 60)
+text = "⚒ 地图工坊（新建/编辑/官方模板/测试）"
+theme_override_font_sizes/font_size = 22
+
 [node name="HSep" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="LblTest" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "── V0.1 验收测试（快速进入） ──"
+text = "── V0.2 验收测试（快速进入） ──"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.96, 0.91, 0.79, 1)
 theme_override_font_sizes/font_size = 16

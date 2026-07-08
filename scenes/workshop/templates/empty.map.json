@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "map_id": "empty_01",
+  "display_name": "🧱 空白地图",
+  "tilesets": [
+    { "id": 1, "name": "farm", "first_id": 1 },
+    { "id": 2, "name": "village", "first_id": 100 },
+    { "id": 3, "name": "forest", "first_id": 200 },
+    { "id": 4, "name": "castle", "first_id": 300 },
+    { "id": 5, "name": "admin", "first_id": 400 }
+  ],
+  "layers": [
+    { "index": 0, "name": "Layer0 背景远景", "cells": [] },
+    { "index": 1, "name": "Layer1 背景近景", "cells": [] },
+    { "index": 2, "name": "Layer2 平台/地面", "cells": [] },
+    { "index": 3, "name": "Layer3 装饰物件", "cells": [] },
+    { "index": 4, "name": "Layer4 前景装饰", "cells": [] },
+    { "index": 5, "name": "Layer5 特效", "cells": [] },
+    { "index": 6, "name": "Layer6 实体碰撞", "cells": [] },
+    { "index": 7, "name": "Layer7 UI/标记", "cells": [] }
+  ],
+  "entities": [],
+  "objectives": [
+    { "logic": "AND" },
+    {
+      "id": "reach_end",
+      "type": "REACH_AREA",
+      "data": { "x": 1600, "y": 700, "w": 120, "h": 120 },
+      "reward": { "gold": 20 }
+    }
+  ],
+  "meta": {
+    "spawn": { "x": 200, "y": 800 },
+    "next_level": "",
+    "template_name": "empty",
+    "create_ts": "2025-01-01T00:00:00"
+  }
+}
