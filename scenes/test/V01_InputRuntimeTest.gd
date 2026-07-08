@@ -1,5 +1,5 @@
 extends Node2D
-## Headless runtime test for V01_InputCollisionTest (28 assertions)
+## Headless runtime test for V01_InputCollisionTest (30 assertions)
 var passed: int = 0
 var failed: int = 0
 var _test_scene: Node2D
@@ -17,6 +17,7 @@ var _gold1: Node
 var _pot1: Node
 var _ladder: Node
 var _lines_out: Array[String] = []
+var _climb_y0: float = 0.0
 
 func _ready() -> void:
 	var packed := load("res://scenes/test/V01_InputCollisionTest.tscn")
@@ -133,14 +134,18 @@ func _phase4c_potion_picked() -> void:
 	_expect(p_inv == 1, "Auto-pickup -> internal Potion inventory =%d (expected 1)" % p_inv, "Potion auto-pick internal count wrong: %d" % p_inv)
 	_expect(p == "1", "After Potion auto-pickup -> HUD PotionVal=%s (expected 1)" % p, "Potion pickup wrong Pot=%s" % p)
 	_expect(pot_gone, "Potion1 pickup vanished (queue_free/invalid=%s)" % str(pot_gone), "Potion1 still visible after pickup!")
-	# Phase5: teleport onto ladder + set _in_ladder_area=true + fire W (ui_up) -> climb mode
-	if _ladder:
-		_player.position = _ladder.position
+	# Phase5: teleport onto ladder + set _in_ladder_area=true + fire W (ui_up) -> climb up (position.y should DECREASE)
+	var y_before_climb: float = 9999.0
+	if _ladder and _player:
+		y_before_climb = float(_ladder.position.y)
+		_player.position = Vector2(_ladder.position.x, _ladder.position.y)
 		if "_in_ladder_area" in _test_scene:
 			_test_scene["_in_ladder_area"] = true
 		if "hud" in _test_scene and _test_scene.has_method("hud"):
 			_test_scene.call("hud", "[LADDER] enter. Press W/S to climb")
+	_expect(abs(y_before_climb - _ladder.position.y) < 0.01, "Player placed on ladder (before climb y=%.2f)" % y_before_climb, "Failed to place player at ladder start y")
 	Input.action_press("ui_up")
+	_climb_y0 = y_before_climb
 	_sched(0.35, _phase5_climb)
 
 func _phase5_climb() -> void:
@@ -151,8 +156,12 @@ func _phase5_climb() -> void:
 		in_area = bool(_test_scene["_in_ladder_area"])
 	if "_is_climbing" in _test_scene:
 		climbing = bool(_test_scene["_is_climbing"])
+	var y_now: float = _player.position.y if _player else 99999.0
+	var dy: float = y_now - _climb_y0
+	var climbed_up: bool = dy < -10.0
 	_expect(in_area, "After Ladder area_entered -> _in_ladder_area=true", "_in_ladder_area still false after area_entered")
 	_expect(climbing, "After W (ui_up) held on ladder -> _is_climbing=true", "Climb didn't activate. inArea=%s climb=%s" % [in_area, climbing])
+	_expect(climbed_up, "Held W 0.35s on ladder -> player climbed UP (dy=%.2f px, expect <-10). y0=%.1f y1=%.1f" % [dy, _climb_y0, y_now], "W pressed but player DIDN'T climb up! dy=%.2f (expected negative; sign-error gravity bug). ladder_y0=%.1f y_now=%.1f" % [dy, _climb_y0, y_now])
 	# exit ladder mode + teleport player back above ground so it falls and lands.
 	if "_in_ladder_area" in _test_scene:
 		_test_scene["_in_ladder_area"] = false

@@ -79,7 +79,10 @@ func _on_jump() -> void:
 	_jump_buffer_timer = JUMP_BUFFER_WINDOW
 	if _is_climbing:
 		_is_climbing = false
-		hud("[LADDER] jump -> off ladder")
+		var jf: float = float(Config.GetL2("player.jumpForce", -720.0))
+		velocity.y = jf
+		_is_jumping = true
+		hud("[LADDER] jump off ladder")
 	else:
 		hud("[OK] JumpPressed (buffered %.0fms)" % [JUMP_BUFFER_WINDOW * 1000.0])
 
@@ -171,7 +174,7 @@ func _physics_process(delta: float) -> void:
 		v_axis = stick_y
 	if _in_ladder_area and (abs(v_axis) > 0.15 or _is_climbing):
 		_is_climbing = true
-		velocity.y = -v_axis * climb_speed
+		velocity.y = v_axis * climb_speed
 		velocity.x = move_toward(velocity.x, InputBus.moveAxis * speed * 0.45, 900.0 * delta)
 	else:
 		_is_climbing = false
