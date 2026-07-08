@@ -223,6 +223,7 @@ shape = SubResource("RectShape_skr")
 
 [node name="Player" type="CharacterBody2D" parent="World"]
 position = Vector2(560, 800)
+groups = ["player"]
 collision_layer = 1
 collision_mask = 100
 monitorable = true

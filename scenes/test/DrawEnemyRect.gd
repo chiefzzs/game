@@ -83,10 +83,8 @@ func _draw_sword(hand_pos: Vector2, slash_t: float) -> void:
 	var angle := base_angle
 	if slash_t >= 0.0:
 		angle = base_angle + (-slash_angle_range / 2.0 + slash_t * slash_angle_range)
-	var saved := get_transform()
-	var t2 := Transform2D(angle, hand_pos)
-	set_transform(saved * t2)
-	# 剑身 blade: 28 长, 4 宽
+	draw_set_transform(hand_pos, angle, Vector2.ONE)
+	# 剑身 blade: 30 长, 4 宽
 	draw_rect(Rect2(0, -2, 30, 4), COLOR_SWORD_BLADE, true)
 	draw_rect(Rect2(0, -2, 30, 4), COLOR_SWORD_EDGE, false, 1.0)
 	# 剑尖
@@ -102,7 +100,7 @@ func _draw_sword(hand_pos: Vector2, slash_t: float) -> void:
 	# 剑柄 hilt
 	draw_rect(Rect2(-8, -2, 6, 4), COLOR_SWORD_HILT, true)
 	draw_rect(Rect2(-9, -2.5, 1.5, 5), COLOR_SWORD_GUARD, true)
-	set_transform(saved)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_exclamation(pos: Vector2) -> void:
 	var bob := sin(Time.get_ticks_msec() / 90.0) * 1.2
