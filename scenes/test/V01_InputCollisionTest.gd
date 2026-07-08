@@ -13,6 +13,7 @@ extends Node2D
 @onready var shield: Node2D = $World/Player/Shield
 @onready var block_aura: Node2D = $World/Player/BlockAura
 @onready var weapon_holder: Node2D = $World/Player/WeaponHolder
+@onready var attack_hitbox: Area2D = $World/Player/AttackHitbox
 @onready var inv_gold: Label = $UI/Inv/GoldVal
 @onready var inv_pot: Label = $UI/Inv/PotVal
 @onready var hp_bar: ProgressBar = $UI/HealthBars/HpRow/HpBar
@@ -75,6 +76,15 @@ func _ready() -> void:
 			var area: Area2D = child
 			area.body_entered.connect(func(b: Node): _on_area2d_body_entered(area, b))
 			area.body_exited.connect(func(b: Node): _on_area2d_body_exited(area, b))
+		# Hook enemy scarecrows (CharacterBody2D) — died signals, etc.
+		if child is CharacterBody2D and child != player and child.has_method("take_damage"):
+			if child.has_signal("died"):
+				child.died.connect(func (): _on_enemy_died(child))
+	# attack hitbox (rake swing) collides with enemies (Layer 2 Enemy)
+	if attack_hitbox:
+		attack_hitbox.monitoring = false
+		attack_hitbox.monitorable = false
+		attack_hitbox.body_entered.connect(_on_attack_hitbox_body_entered)
 	hud("[OK] Scene ready. onFloor=%s" % player.is_on_floor())
 	hud("[INFO] Gold=0 Potion=0 Nearby=0 Climb=false DashCD=0.0")
 	# 初始化最近朝向：从场景里 drawer 的初始 scale.x 读取（支持场景默认朝左）
@@ -250,6 +260,59 @@ func _on_attack() -> void:
 		_attack_tween.tween_property(weapon_holder, "rotation", base_rot - 0.3, 0.20)
 		_attack_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_attack_tween.tween_property(weapon_holder, "rotation", base_rot, 0.08)
+	# Activate attack hitbox briefly — align it to the swing direction, active 0.18s (matches first cubic tween)
+	if attack_hitbox:
+		# Hitbox position: ahead of player, facing fw — position.x = 28 if right, -28 if left
+		var hb_x: float = 28.0 * fw
+		var hb_y: float = -4.0
+		attack_hitbox.position = Vector2(hb_x, hb_y)
+		# scale.x to flip the box slightly (box is symmetric, position is the key)
+		attack_hitbox.scale.x = 1.0
+		attack_hitbox.monitoring = true
+		attack_hitbox.monitorable = true
+		await get_tree().create_timer(0.18).timeout
+		if is_instance_valid(attack_hitbox):
+			attack_hitbox.monitoring = false
+			attack_hitbox.monitorable = false
+
+## Enemy melee / ranged: damage HP directly; called from Scarecrow.gd when player in attack range.
+## Blocking reduces damage to 1 (from full ATK) + shields stamina for SP drain handled separately.
+func damage_player(amount: int) -> void:
+	if amount <= 0:
+		return
+	if _is_blocking:
+		# Blocked!  Player takes 1 chip damage; rest absorbed by block aura
+		var blocked := amount - 1
+		hud("[HIT] Blocked! absorbed %d dmg, chip -1 HP" % blocked)
+		set_hp(max(0, _hp - 1))
+		return
+	set_hp(max(0, _hp - amount))
+	hud("[HIT] -%d HP! (remain %d/%d)" % [amount, _hp, _hp_max])
+
+## When an enemy (e.g. Scarecrow) dies, drop 1 Gold pickup at its position.
+func _on_enemy_died(enemy: CharacterBody2D) -> void:
+	if not is_instance_valid(enemy):
+		return
+	var die_pos: Vector2 = enemy.global_position
+	_inventory_gold += 1
+	hud("[KILL] Scarecrow slain! +1 Gold (total %d)" % _inventory_gold)
+	# Optionally: spawn a visible gold pickup — for simplicity just grant gold & HUD now.
+	# (Pickup spawn removed to avoid collision issues with queue_free timing; gold counts up directly)
+	_refresh_inventory()
+
+## Rake attack hitbox — hit Layer2=Enemy bodies.  Each sweep damages each enemy once (first hit).
+func _on_attack_hitbox_body_entered(body: Node) -> void:
+	if body == null or not is_instance_valid(body):
+		return
+	if body == player:
+		return
+	if not body.has_method("take_damage"):
+		return
+	# Guard: don't double-hit the same enemy in the same swing (we turn monitoring off anyway quickly)
+	if not body.is_in_group("hit_%d" % (Time.get_ticks_msec() / 50)):
+		var dmg := 14
+		body.call("take_damage", dmg)
+		hud("[HITBOX] Rake! -%d HP to enemy  (pos %d,%d)" % [dmg, int(body.global_position.x), int(body.global_position.y)])
 
 func _update_aura_color() -> void:
 	if not block_aura:

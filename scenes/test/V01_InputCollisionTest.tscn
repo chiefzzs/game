@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://b0inputtest001"]
+[gd_scene load_steps=11 format=3 uid="uid://b0inputtest001"]
 
 [ext_resource type="Script" path="res://scenes/test/V01_InputCollisionTest.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/test/DrawPlayerSimple.gd" id="2_drawplayer"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://scenes/test/DrawPotion.gd" id="4_potdraw"]
 [ext_resource type="Script" path="res://scenes/test/DrawShield.gd" id="5_shielddraw"]
 [ext_resource type="Script" path="res://scenes/test/DrawRake.gd" id="6_rakedraw"]
+[ext_resource type="Script" path="res://scenes/test/Scarecrow.gd" id="7_scarecrow_ai"]
+[ext_resource type="Script" path="res://scenes/test/DrawScarecrow.gd" id="8_scarecrow_draw"]
 
 [sub_resource type="RectangleShape2D" id="RectShape_player"]
 size = Vector2(28, 48)
@@ -24,6 +26,12 @@ radius = 20.0
 
 [sub_resource type="CircleShape2D" id="CircShape_rake"]
 radius = 24.0
+
+[sub_resource type="RectangleShape2D" id="RectShape_skr"]
+size = Vector2(38, 60)
+
+[sub_resource type="RectangleShape2D" id="RectShape_atk"]
+size = Vector2(48, 46)
 
 [sub_resource type="RectangleShape2D" id="RectShape_ladder"]
 size = Vector2(50, 340)
@@ -192,6 +200,26 @@ script = ExtResource("6_rakedraw")
 [node name="Coll" type="CollisionShape2D" parent="World/Rake"]
 shape = SubResource("CircShape_rake")
 
+[node name="Scarecrow1" type="CharacterBody2D" parent="World"]
+position = Vector2(1100, 700)
+script = ExtResource("7_scarecrow_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Scarecrow1"]
+script = ExtResource("8_scarecrow_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Scarecrow1"]
+shape = SubResource("RectShape_skr")
+
+[node name="Scarecrow2" type="CharacterBody2D" parent="World"]
+position = Vector2(1520, 770)
+script = ExtResource("7_scarecrow_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Scarecrow2"]
+script = ExtResource("8_scarecrow_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Scarecrow2"]
+shape = SubResource("RectShape_skr")
+
 [node name="Player" type="CharacterBody2D" parent="World"]
 position = Vector2(560, 800)
 collision_layer = 1
@@ -277,6 +305,13 @@ held = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player"]
 shape = SubResource("RectShape_player")
+
+[node name="AttackHitbox" type="Area2D" parent="World/Player"]
+collision_layer = 0
+collision_mask = 2
+
+[node name="HitShape" type="CollisionShape2D" parent="World/Player/AttackHitbox"]
+shape = SubResource("RectShape_atk")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
