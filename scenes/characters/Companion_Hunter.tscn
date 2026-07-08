@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://bchunter0000003"]
+[ext_resource type="Script" path="res://scripts/characters/HunterCompanion.gd" id="1_hunter"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hunter"]
+size = Vector2(24, 48)
+[node name="CompanionHunter" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 12
+script = ExtResource("1_hunter")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -24)
+shape = SubResource("RectangleShape2D_hunter")

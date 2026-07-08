@@ -1,0 +1,44 @@
+[gd_scene load_steps=12 format=3 uid="uid://bccombatarena0002"]
+[ext_resource type="Script" path="res://scripts/characters/FarmerPlayer.gd" id="1_pf"]
+[ext_resource type="Script" path="res://scripts/characters/AxemanCompanion.gd" id="2_ax"]
+[ext_resource type="Script" path="res://scripts/characters/HunterCompanion.gd" id="3_hu"]
+[ext_resource type="Script" path="res://scripts/characters/ShepherdCompanion.gd" id="4_sh"]
+[ext_resource type="Script" path="res://scripts/characters/WalkSoldierEnemy.gd" id="5_ws"]
+[ext_resource type="Script" path="res://scripts/characters/JumpScoutEnemy.gd" id="6_js"]
+[ext_resource type="Script" path="res://scripts/characters/DummyEnemy.gd" id="7_du"]
+[ext_resource type="Script" path="res://scripts/systems/PickupItem.gd" id="8_pu"]
+[ext_resource type="Script" path="res://scripts/ui/CombatHUDController.gd" id="9_hu"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground_arena"]
+size = Vector2(2400, 40)
+[node name="CombatArena" type="Node2D"]
+[node name="Ground" type="StaticBody2D" parent="."]
+position = Vector2(0, 200)
+collision_layer = 8
+collision_mask = 0
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+shape = SubResource("RectangleShape2D_ground_arena")
+[node name="PlayerFarmer" type="CharacterBody2D" parent="." instance=ExtResource("1_pf")]
+position = Vector2(-400, 0)
+[node name="CompanionAxeman" type="CharacterBody2D" parent="." instance=ExtResource("2_ax")]
+position = Vector2(-520, 0)
+[node name="CompanionHunter" type="CharacterBody2D" parent="." instance=ExtResource("3_hu")]
+position = Vector2(-620, 0)
+[node name="CompanionShepherd" type="CharacterBody2D" parent="." instance=ExtResource("4_sh")]
+position = Vector2(-300, 0)
+[node name="DummyLeft" type="CharacterBody2D" parent="." instance=ExtResource("7_du")]
+position = Vector2(-100, 0)
+[node name="EnemyWalkSoldier" type="CharacterBody2D" parent="." instance=ExtResource("5_ws")]
+position = Vector2(160, 0)
+[node name="EnemyJumpScout1" type="CharacterBody2D" parent="." instance=ExtResource("6_js")]
+position = Vector2(380, 0)
+[node name="EnemyJumpScout2" type="CharacterBody2D" parent="." instance=ExtResource("6_js")]
+position = Vector2(500, -40)
+[node name="Gold_1" type="Area2D" parent="." instance=ExtResource("8_pu")]
+position = Vector2(100, 160)
+item_id = "gold"
+value = 10
+[node name="Potion_1" type="Area2D" parent="." instance=ExtResource("8_pu")]
+position = Vector2(260, 160)
+item_id = "potion_hp"
+value = 25
+[node name="CombatHUD" type="CanvasLayer" parent="." instance=ExtResource("9_hu")]

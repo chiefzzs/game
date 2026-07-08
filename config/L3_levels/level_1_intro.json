@@ -1,0 +1,52 @@
+{
+  "level_id": "level_1_intro",
+  "display_name": "序章 - 村头小径",
+  "world": "SunriseVillage",
+  "grid": { "cell_size": 16, "width": 80, "height": 24 },
+  "background": { "parallax": [
+      { "layer": 1, "texture": "sky",   "speed": 0.05, "color": "#88CFFF" },
+      { "layer": 2, "texture": "hills", "speed": 0.25, "color": "#7FB77E" },
+      { "layer": 3, "texture": "trees", "speed": 0.55, "color": "#5A8A3B" }
+  ]},
+  "palette": { "solid": ["ground", "stone"], "hazard": ["spike"] },
+  "player_spawns": [
+    { "id": "spawn_main", "x": 10, "y": 14, "entry_door": "left_village" }
+  ],
+  "required_companions": [ "axeman", "hunter", "shepherd" ],
+  "companions": [
+    { "id": "axeman",   "instance_id": "comp_01", "x": 8,  "y": 14 },
+    { "id": "hunter",   "instance_id": "comp_02", "x": 6,  "y": 14 },
+    { "id": "shepherd", "instance_id": "comp_03", "x": 12, "y": 14 }
+  ],
+  "enemies": [
+    { "id": "dummy",        "instance_id": "e_dummy_01", "x": 22, "y": 14, "patrol_radius": 0.0 },
+    { "id": "walk_soldier", "instance_id": "e_ws_01",    "x": 30, "y": 14, "patrol_radius": 80.0 },
+    { "id": "walk_soldier", "instance_id": "e_ws_02",    "x": 44, "y": 14, "patrol_radius": 60.0 }
+  ],
+  "interactables": [
+    { "type": "sign",   "instance_id": "sign_01", "x": 4,  "y": 14,
+      "dialog": ["Welcome to Sunrise Village", "Press J to Attack, 1/2/3 to Swap Weapon"] },
+    { "type": "chest",  "instance_id": "chest_01", "x": 70, "y": 14, "gold": 20, "potion_hp": 1 }
+  ],
+  "pickups": [
+    { "item_id": "gold",      "instance_id": "pk_g_01", "x": 26, "y": 14, "value": 10 },
+    { "item_id": "gold",      "instance_id": "pk_g_02", "x": 38, "y": 14, "value": 10 },
+    { "item_id": "potion_hp", "instance_id": "pk_p_01", "x": 58, "y": 14, "value": 25 }
+  ],
+  "platforms": [
+    { "kind": "ground_fill", "instance_id": "pf_g1", "x1": 0,  "y1": 15, "x2": 80, "y2": 16, "material": "dirt" }
+  ],
+  "doors": [
+    { "id": "left_village",   "x": 0,  "y": 14, "to_level": null, "to_door": null, "locked": false },
+    { "id": "to_forest_edge", "x": 79, "y": 14, "to_level": "level_2_forest_edge", "to_door": "from_village", "locked": false }
+  ],
+  "camera_limits": { "x_min": 0, "x_max": 1280, "y_min": -400, "y_max": 400 },
+  "objectives": [
+    { "id": "obj_meet_companions", "type": "reach_area", "area": "x>15", "title": "Reach the training ground", "next": "obj_beat_dummy" },
+    { "id": "obj_beat_dummy",      "type": "kill", "enemy_id": "e_dummy_01", "count": 1, "title": "Attack the Training Dummy", "next": "obj_two_soldiers" },
+    { "id": "obj_two_soldiers",    "type": "kill_all_tag", "tag": "walk_soldier", "title": "Defeat the 2 Patrol Soldiers", "next": null }
+  ],
+  "initial_objective_id": "obj_meet_companions",
+  "music": "village_day",
+  "daynight": { "initial_hour": 9, "cycle_minutes_per_day": 1440 }
+}

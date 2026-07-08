@@ -1,0 +1,31 @@
+{
+  "comment": "V0.3 L2_balance - Pickup drops & item definitions",
+  "drops": {
+    "gold_small": {
+      "id": "gold_small", "kind": "gold", "display_name": "小袋金币",
+      "value_min": 1, "value_max": 3, "color": "#FFD166", "weight_px": 10,
+      "auto_pickup": true, "rarity_weight": 70
+    },
+    "gold_mid": {
+      "id": "gold_mid", "kind": "gold", "display_name": "金币袋",
+      "value_min": 4, "value_max": 9, "color": "#F5A623", "weight_px": 14,
+      "auto_pickup": true, "rarity_weight": 25
+    },
+    "gold_big": {
+      "id": "gold_big", "kind": "gold", "display_name": "金元宝",
+      "value_min": 10, "value_max": 20, "color": "#FF6B35", "weight_px": 18,
+      "auto_pickup": false, "rarity_weight": 5
+    },
+    "potion_hp_s": {
+      "id": "potion_hp_s", "kind": "potion_hp", "display_name": "小回血药",
+      "heal_value": 25, "color": "#EF476F", "weight_px": 12,
+      "auto_pickup": true, "rarity_weight": 80
+    },
+    "potion_hp_m": {
+      "id": "potion_hp_m", "kind": "potion_hp", "display_name": "回血药瓶",
+      "heal_value": 60, "color": "#D62828", "weight_px": 14,
+      "auto_pickup": false, "rarity_weight": 20
+    }
+  },
+  "roll_table_default": ["gold_small","gold_small","gold_small","gold_mid","gold_mid","gold_big","potion_hp_s","potion_hp_s"]
+}

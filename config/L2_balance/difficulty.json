@@ -1,6 +1,0 @@
-{
-  "easy":      {"enemyHpMul": 0.7, "enemyAtkMul": 0.6, "goldMul": 1.5, "companionAiMul": 1.2, "desc": "轻松，适合新手"},
-  "normal":    {"enemyHpMul": 1.0, "enemyAtkMul": 1.0, "goldMul": 1.0, "companionAiMul": 1.0, "desc": "标准体验"},
-  "hard":      {"enemyHpMul": 1.5, "enemyAtkMul": 1.35, "goldMul": 0.85, "companionAiMul": 0.85, "desc": "敌人强化，同伴弱化"},
-  "hell":      {"enemyHpMul": 2.2, "enemyAtkMul": 1.8, "goldMul": 0.6, "companionAiMul": 0.6, "desc": "死了就删档挑战模式"}
-}

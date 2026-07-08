@@ -1,55 +1,63 @@
-@tool
-extends SceneTree
-## Phase4 Headless：MapSerializer 构造 farm 模板 → 保存临时文件 → Validator校验 → MapLoader 实例化。
-func _init() -> void:
-	var serializer := load("res://scripts/editor/MapSerializer.gd").new()
-	var validator := load("res://scripts/editor/MapSchemaValidator.gd").new()
-	var loader := load("res://scripts/editor/MapLoader.gd").new()
-	var tmp_dir := OS.get_user_data_dir().path_join("tmp_smoke")
-	DirAccess.make_dir_recursive_absolute(tmp_dir)
-	var save_to := tmp_dir.path_join("smoke_farm_io.map.json")
-	# 1. build
-	var cells := []
-	for x in range(0, 60):
-		cells.append([x, 14, 1])
-	var layers := []
-	for li in range(8):
-		if li == 2:
-			layers.append({"index": li, "name": "L2", "cells": cells})
-		else:
-			layers.append({"index": li, "name": "L"+str(li), "cells": []})
-	var entities := [
-		{"id": "cp1", "kind": "checkpoint", "x": 200, "y": 760, "props": {"cp_id": "cp_start"}},
-		{"id": "sc1", "kind": "enemy", "x": 1100, "y": 660, "props": {"hp": 30, "atk": 10}},
-	]
-	var objectives := [
-		{"logic": "AND"},
-		{"id": "reach_end", "type": "REACH_AREA", "data": {"x": 1600, "y": 700, "w": 120, "h": 120}, "reward": {"gold": 20}},
-	]
-	var dict := serializer.build_map_dict("smoke_io_farm", "Farm-Smoke", layers, entities, objectives, {"spawn": {"x": 200, "y": 800}})
-	# 2. save
-	var bytes := serializer.save_to_file(dict, save_to, true)
-	if bytes <= 0:
-		print("[Phase4][FAIL] save failed, bytes=", bytes)
-		quit(1)
-	print("[Phase4][OK] 写入 ", save_to, "  ", bytes, " bytes")
-	# 3. validate
-	var errs := validator.validate(dict)
-	if not errs.is_empty():
-		print("[Phase4][FAIL] validate: ", errs.size(), " errors")
-		quit(2)
-	print("[Phase4][OK] Schema 通过")
-	# 4. load
-	var loaded: Dictionary = serializer.load_from_file(save_to, false)
-	if loaded.is_empty():
-		print("[Phase4][FAIL] load returned empty")
-		quit(3)
-	var parent := Node2D.new()
-	add_child(parent)
-	var summary: Dictionary = loader.load_map_to_parent(parent, loaded, false)
-	print("[Phase4][OK] MapLoader 实例化 layers=", summary.layers_instantiated,
-		" entities=", summary.entities_instantiated, " cells=", summary.cells_count,
-		" errors=", summary.error_count)
-	var success := summary.error_count == 0 and summary.layers_instantiated == 8
-	print("[Phase4]", "✅ 全部通过" if success else "❌ 失败")
-	quit(0 if success else 4)
+extends RefCounted
+
+static func _autoload(name: String) -> Node:
+	var ml = Engine.get_main_loop()
+	if typeof(ml) != TYPE_OBJECT or ml == null:
+		return null
+	if not (ml is SceneTree):
+		return null
+	var st: SceneTree = ml
+	return st.root.get_node_or_null(NodePath("/root/" + name))
+## V0.3 SmokeTestMapIO.gd — Phase3验收: Save-Load冒烟 (V0.2回归兼容)
+## 目标: 1.PF serialize/deserialize roundtrip 2.SaveSlotManager 槽读写 roundtrip
+## run_headless() => Dictionary with io_ok flag
+
+const ID_PF := "ProgressFlags"
+const ID_SM := "SaveSlotManager"
+
+func run_headless(map_name: String = "", slot: int = 0) -> Dictionary:
+	var out: Dictionary = {
+		"io_ok": false, "errors": [], "map_name": map_name, "slot": slot,
+		"progress_passes": 0, "save_passes": 0
+	}
+	if not Engine.has_singleton(ID_PF) or not Engine.has_singleton(ID_SM):
+		out.errors.append("Missing required autoload singletons")
+		return out
+	var PF: Node = Engine.get_singleton(ID_PF)
+	var SM: Node = Engine.get_singleton(ID_SM)
+	if PF == null or SM == null:
+		out.errors.append("Failed to access singleton nodes")
+		return out
+	var pf_pass := 0
+	PF.call("Set", "v03_t1", true)
+	PF.call("Set", "v03_t2", false)
+	PF.call("SetKV", "gold", 123)
+	PF.call("SetKV", "weapon", "axe")
+	var snap1: Dictionary = PF.call("serialize")
+	PF.call("clear_all")
+	if PF.call("Get", "v03_t1") == false and PF.call("GetKV", "gold", 0) == 0:
+		pf_pass += 1
+	PF.call("deserialize", snap1)
+	if PF.call("Get", "v03_t1") == true and PF.call("Get", "v03_t2") == false \
+	   and PF.call("GetKV", "gold", 0) == 123 and PF.call("GetKV", "weapon","") == "axe":
+		pf_pass += 1
+	out.progress_passes = pf_pass
+	if pf_pass < 2:
+		out.errors.append("PF roundtrip failed (2 expected, got %d)" % pf_pass)
+	var sm_pass := 0
+	var test_slot: int = 5
+	SM.call("DeleteSlot", test_slot)
+	var err: int = int(SM.call("NewGame", test_slot))
+	if err == OK:
+		sm_pass += 1
+	var data: Dictionary = SM.call("Load", test_slot)
+	if (data is Dictionary) and data.has("version") and int(data.get("version", 0)) >= 1:
+		sm_pass += 1
+	SM.call("DeleteSlot", test_slot)
+	out.save_passes = sm_pass
+	if sm_pass < 2:
+		out.errors.append("SaveSlot roundtrip failed (2 expected, got %d)" % sm_pass)
+	out.io_ok = (pf_pass == 2) and (sm_pass == 2)
+	print("[SmokeTestMapIO][run_headless] io_ok=%s pf=%d/2 sm=%d/2" % [
+		str(out.io_ok), pf_pass, sm_pass])
+	return out

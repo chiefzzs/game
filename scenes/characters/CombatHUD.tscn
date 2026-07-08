@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://bchud0000000009a"]
+[ext_resource type="Script" path="res://scripts/ui/CombatHUDController.gd" id="1_hud"]
+[node name="CombatHUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")

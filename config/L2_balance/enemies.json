@@ -1,0 +1,36 @@
+{
+  "comment": "V0.3 L2_balance - 3 Enemy types: WalkSoldier / JumpScout / Dummy (Training)",
+  "walk_soldier": {
+    "id": "walk_soldier",
+    "display_name": "巡逻兵",
+    "max_hp": 60,
+    "base_atk": 7,
+    "base_def": 1,
+    "move_speed": 130,
+    "jump_force": 0,
+    "weapon": { "id": "short_sword", "name": "短剑", "atk_mult": 1.0, "range": 48, "cd_sec": 1.1, "knockback": 110, "break_shield": false },
+    "ai": { "patrol_radius": 120, "aggro_radius": 240, "attack_range": 48, "give_up_radius": 420, "drop_gold": [3, 8], "drop_potion_chance": 0.1 }
+  },
+  "jump_scout": {
+    "id": "jump_scout",
+    "display_name": "跳跃斥候",
+    "max_hp": 40,
+    "base_atk": 6,
+    "base_def": 0,
+    "move_speed": 190,
+    "jump_force": -520,
+    "weapon": { "id": "dagger", "name": "双匕", "atk_mult": 0.9, "range": 38, "cd_sec": 0.8, "knockback": 80, "break_shield": false },
+    "ai": { "patrol_radius": 150, "aggro_radius": 300, "attack_range": 38, "give_up_radius": 500, "auto_jump_chance": 0.5, "drop_gold": [4, 10], "drop_potion_chance": 0.15 }
+  },
+  "dummy": {
+    "id": "dummy",
+    "display_name": "训练稻草人",
+    "max_hp": 99999,
+    "base_atk": 0,
+    "base_def": 3,
+    "move_speed": 0,
+    "jump_force": 0,
+    "weapon": { "id": "none", "name": "-", "atk_mult": 0, "range": 0, "cd_sec": 999, "knockback": 0, "break_shield": false },
+    "ai": { "patrol_radius": 0, "aggro_radius": 0, "attack_range": 0, "give_up_radius": 0, "training_dummy": true, "drop_gold": [0,0], "drop_potion_chance": 0.0 }
+  }
+}

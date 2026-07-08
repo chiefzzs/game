@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcjumpscout000006"]
+[ext_resource type="Script" path="res://scripts/characters/JumpScoutEnemy.gd" id="1_js"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_js"]
+size = Vector2(22, 44)
+[node name="EnemyJumpScout" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 11
+script = ExtResource("1_js")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -22)
+shape = SubResource("RectangleShape2D_js")

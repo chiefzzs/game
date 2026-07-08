@@ -1,0 +1,53 @@
+{
+  "level_id": "level_2_forest_edge",
+  "display_name": "第一章 - 林边小径",
+  "world": "ForestEdge",
+  "grid": { "cell_size": 16, "width": 120, "height": 30 },
+  "background": { "parallax": [
+      { "layer": 1, "texture": "sky_morning", "speed": 0.05, "color": "#A9DDF3" },
+      { "layer": 2, "texture": "mountain",    "speed": 0.2,  "color": "#7A9176" },
+      { "layer": 3, "texture": "pine",        "speed": 0.5,  "color": "#3E6B37" }
+  ]},
+  "palette": { "solid": ["ground", "stone", "wood"], "hazard": ["spike", "pit"] },
+  "player_spawns": [
+    { "id": "from_village", "x": 2,  "y": 20, "entry_door": "from_village" }
+  ],
+  "required_companions": ["axeman", "hunter", "shepherd"],
+  "companions": [
+    { "id": "axeman",   "instance_id": "comp_l2_01", "x": 0,  "y": 20 },
+    { "id": "hunter",   "instance_id": "comp_l2_02", "x": 1,  "y": 20 },
+    { "id": "shepherd", "instance_id": "comp_l2_03", "x": 3,  "y": 20 }
+  ],
+  "enemies": [
+    { "id": "walk_soldier", "instance_id": "l2_ws_01", "x": 20,  "y": 20, "patrol_radius": 120 },
+    { "id": "jump_scout",   "instance_id": "l2_js_01", "x": 40,  "y": 20, "patrol_radius": 160 },
+    { "id": "walk_soldier", "instance_id": "l2_ws_02", "x": 60,  "y": 20, "patrol_radius": 100 },
+    { "id": "jump_scout",   "instance_id": "l2_js_02", "x": 80,  "y": 18, "patrol_radius": 200 },
+    { "id": "walk_soldier", "instance_id": "l2_ws_03", "x": 100, "y": 20, "patrol_radius": 80 }
+  ],
+  "interactables": [
+    { "type": "sign",   "instance_id": "l2_sign_01", "x": 5,   "y": 20, "dialog": ["Forest Edge ahead", "Scouts can jump. Watch their dagger!"] },
+    { "type": "chest",  "instance_id": "l2_ch_01",   "x": 115, "y": 20, "gold": 50, "potion_hp": 2 }
+  ],
+  "pickups": [
+    { "item_id": "gold",      "instance_id": "l2_g_01", "x": 30,  "y": 20, "value": 15 },
+    { "item_id": "potion_hp", "instance_id": "l2_p_01", "x": 70,  "y": 20, "value": 25 },
+    { "item_id": "gold",      "instance_id": "l2_g_02", "x": 92,  "y": 18, "value": 12 }
+  ],
+  "platforms": [
+    { "kind": "ground_fill", "instance_id": "l2_g1", "x1": 0,  "y1": 21, "x2": 120, "y2": 22, "material": "dirt" },
+    { "kind": "platform",    "instance_id": "l2_p1", "x1": 76, "y1": 18, "x2": 92,  "y2": 18, "material": "wood" }
+  ],
+  "doors": [
+    { "id": "from_village", "x": 0, "y": 20, "to_level": "level_1_intro", "to_door": "to_forest_edge", "locked": false }
+  ],
+  "camera_limits": { "x_min": 0, "x_max": 1920, "y_min": -400, "y_max": 600 },
+  "objectives": [
+    { "id": "obj_l2_advance", "type": "reach_area", "area": "x>30", "title": "Enter the Forest", "next": "obj_l2_clear_scouts" },
+    { "id": "obj_l2_clear_scouts", "type": "kill_all_tag", "tag": "jump_scout", "title": "Defeat the 2 Jump Scouts", "next": "obj_l2_clear_all" },
+    { "id": "obj_l2_clear_all", "type": "kill_all_tag", "tag": "walk_soldier", "title": "Clear remaining patrols", "next": null }
+  ],
+  "initial_objective_id": "obj_l2_advance",
+  "music": "forest_day",
+  "daynight": { "initial_hour": 10, "cycle_minutes_per_day": 1440 }
+}

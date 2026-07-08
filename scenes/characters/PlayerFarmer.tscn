@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://bm1farmer00001"]
+[ext_resource type="Script" path="res://scripts/characters/FarmerPlayer.gd" id="1_farmer"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_farmer"]
+size = Vector2(28, 52)
+[node name="PlayerFarmer" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 14
+script = ExtResource("1_farmer")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -26)
+shape = SubResource("RectangleShape2D_farmer")

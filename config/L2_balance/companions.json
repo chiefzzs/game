@@ -1,0 +1,36 @@
+{
+  "comment": "V0.3 L2_balance - 3 Companions: Axeman / Hunter / Shepherd",
+  "axeman": {
+    "id": "axeman",
+    "display_name": "樵夫",
+    "max_hp": 120,
+    "base_atk": 12,
+    "base_def": 4,
+    "move_speed": 220,
+    "jump_force": -460,
+    "weapon": { "id": "axe_2h", "name": "双手斧", "atk_mult": 1.2, "range": 58, "cd_sec": 1.2, "knockback": 240, "break_shield": true },
+    "ai": { "follow_distance": 90, "alert_radius": 260, "attack_range": 55, "retreat_radius": 340, "heal_per_sec": 0 }
+  },
+  "hunter": {
+    "id": "hunter",
+    "display_name": "猎户",
+    "max_hp": 70,
+    "base_atk": 9,
+    "base_def": 1,
+    "move_speed": 250,
+    "jump_force": -500,
+    "weapon": { "id": "shortbow", "name": "猎户短弓", "atk_mult": 1.0, "range": 500, "cd_sec": 0.9, "knockback": 40, "break_shield": false, "projectile": true, "proj_speed": 620 },
+    "ai": { "follow_distance": 140, "alert_radius": 320, "attack_range": 380, "retreat_radius": 420, "preferred_range": 300, "heal_per_sec": 0 }
+  },
+  "shepherd": {
+    "id": "shepherd",
+    "display_name": "牧人",
+    "max_hp": 80,
+    "base_atk": 6,
+    "base_def": 3,
+    "move_speed": 235,
+    "jump_force": -480,
+    "weapon": { "id": "staff", "name": "牧羊杖", "atk_mult": 0.8, "range": 48, "cd_sec": 0.9, "knockback": 90, "break_shield": false },
+    "ai": { "follow_distance": 60, "alert_radius": 200, "attack_range": 45, "retreat_radius": 280, "heal_per_sec": 2, "heal_cycle_sec": 5.0, "heal_pct_per_cycle": 0.02, "shield_ally_pct": 0.5 }
+  }
+}

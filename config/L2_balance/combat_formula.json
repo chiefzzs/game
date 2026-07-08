@@ -1,0 +1,45 @@
+{
+  "comment": "V0.3 L2_balance - Combat damage formula parameters",
+  "formula": {
+    "base_damage_mult": 1.0,
+    "defense_subtract": 1.0,
+    "defense_min_clamp": 0,
+    "crit": {
+      "default_rate": 0.05,
+      "default_multiplier": 1.75,
+      "from_behind_bonus_rate": 0.20
+    },
+    "backstab": {
+      "enabled": true,
+      "angle_deg": 60.0,
+      "damage_multiplier": 2.0,
+      "guarantees_crit": true
+    },
+    "block": {
+      "default_reduction": 0.80,
+      "stamina_per_damage": 2,
+      "shield_break_multiplier": 2.0,
+      "breaks_shield_if_shield_break_weapon": true
+    },
+    "clamps": {
+      "min_final_damage": 1,
+      "max_by_target_hp_pct": 1.0
+    },
+    "damage_types": {
+      "physical":  1.0,
+      "arrow":     0.9,
+      "fall":      1.0
+    },
+    "floating_text": {
+      "normal_color": "#FFFFFF",
+      "crit_color": "#FFD166",
+      "backstab_color": "#EF476F",
+      "blocked_color": "#8FD3FF",
+      "miss_color": "#9AA0A6",
+      "fly_speed": 60.0,
+      "life_sec": 0.9,
+      "font_size_crit": 22,
+      "font_size_normal": 16
+    }
+  }
+}

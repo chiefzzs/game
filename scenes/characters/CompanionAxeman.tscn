@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcaxeman000002"]
+[ext_resource type="Script" path="res://scripts/characters/AxemanCompanion.gd" id="1_axeman"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_axeman"]
+size = Vector2(26, 50)
+[node name="CompanionAxeman" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 12
+script = ExtResource("1_axeman")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -25)
+shape = SubResource("RectangleShape2D_axeman")
