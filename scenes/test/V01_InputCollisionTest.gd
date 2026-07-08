@@ -108,36 +108,37 @@ func _on_block_r() -> void:
 	hud("[OK] BlockReleased (shield OFF)")
 
 func _on_interact() -> void:
-	if _nearby_pickups.size() == 0:
-		hud("[PICKUP] no item nearby")
+	hud("[PICKUP] auto-pickup enabled. Walk over items to collect them")
+
+func _pickup_one(pickup: Node) -> void:
+	if pickup == null or not is_instance_valid(pickup):
 		return
-	var pickup: Node = _nearby_pickups.pop_front()
 	var kind: String = "?"
-	if pickup and "pickup_kind" in pickup:
-		kind = str(pickup.get("pickup_kind"))
+	if pickup.has_meta("pickup_kind"):
+		kind = str(pickup.get_meta("pickup_kind"))
 	match kind:
 		"gold":
 			_inventory_gold += 1
-			hud("[PICKUP] +1 Gold  (total %d)" % _inventory_gold)
+			hud("[AUTO-PICKUP] +1 Gold  (total %d)" % _inventory_gold)
 		"potion":
 			_inventory_pot += 1
-			hud("[PICKUP] +1 Potion (total %d)" % _inventory_pot)
+			hud("[AUTO-PICKUP] +1 Potion (total %d)" % _inventory_pot)
 		_:
-			hud("[PICKUP] unknown kind=%s" % kind)
-	if pickup and pickup.has_method("queue_free"):
+			hud("[AUTO-PICKUP] unknown kind=%s" % kind)
+	if pickup.has_method("queue_free"):
 		pickup.queue_free()
 	_refresh_inventory()
 
 func _on_area2d_body_entered(area: Area2D, body: Node) -> void:
 	if not (body is CharacterBody2D):
 		return
-	var role: String = str(area.get("role") if "role" in area else "")
+	var role: String = str(area.get_meta("role") if area.has_meta("role") else "")
 	match role:
 		"pickup":
 			if not _nearby_pickups.has(area):
 				_nearby_pickups.append(area)
-				var kind: String = str(area.get("pickup_kind") if "pickup_kind" in area else "?")
-				hud("[PICKUP] nearby +%s  (near=%d). Press E/B to pick" % [kind, _nearby_pickups.size()])
+				var kind: String = str(area.get_meta("pickup_kind") if area.has_meta("pickup_kind") else "?")
+				hud("[PICKUP] detect +%s  (near=%d). Will auto-pick" % [kind, _nearby_pickups.size()])
 		"ladder":
 			_in_ladder_area = true
 			hud("[LADDER] enter. Press W/S (or stick up/down) to climb")
@@ -145,7 +146,7 @@ func _on_area2d_body_entered(area: Area2D, body: Node) -> void:
 func _on_area2d_body_exited(area: Area2D, body: Node) -> void:
 	if not (body is CharacterBody2D):
 		return
-	var role: String = str(area.get("role") if "role" in area else "")
+	var role: String = str(area.get_meta("role") if area.has_meta("role") else "")
 	match role:
 		"pickup":
 			_nearby_pickups.erase(area)
@@ -203,6 +204,9 @@ func _physics_process(delta: float) -> void:
 	velocity = player.velocity
 	if velocity.y >= 0.0:
 		_is_jumping = false
+	while _nearby_pickups.size() > 0:
+		var item: Node = _nearby_pickups.pop_front()
+		_pickup_one(item)
 	if abs(InputBus.moveAxis) > 0.01 and drawer:
 		drawer.scale.x = -1.0 if InputBus.moveAxis < 0.0 else 1.0
 		if shield:

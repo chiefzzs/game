@@ -85,7 +85,7 @@ color = Color(0.5, 0.4, 0.25, 1)
 position = Vector2(420, 740)
 collision_layer = 64
 collision_mask = 1
-role = "ladder"
+metadata/role = "ladder"
 
 [node name="Coll" type="CollisionShape2D" parent="World/Ladder"]
 shape = SubResource("RectShape_ladder")
@@ -94,8 +94,8 @@ shape = SubResource("RectShape_ladder")
 position = Vector2(830, 768)
 collision_layer = 32
 collision_mask = 1
-role = "pickup"
-pickup_kind = "gold"
+metadata/role = "pickup"
+metadata/pickup_kind = "gold"
 
 [node name="GoldDraw" type="Node2D" parent="World/Gold1"]
 script = ExtResource("3_golddraw")
@@ -107,8 +107,8 @@ shape = SubResource("CircShape_gold")
 position = Vector2(1250, 660)
 collision_layer = 32
 collision_mask = 1
-role = "pickup"
-pickup_kind = "gold"
+metadata/role = "pickup"
+metadata/pickup_kind = "gold"
 
 [node name="GoldDraw" type="Node2D" parent="World/Gold2"]
 script = ExtResource("3_golddraw")
@@ -120,8 +120,8 @@ shape = SubResource("CircShape_gold")
 position = Vector2(260, 855)
 collision_layer = 32
 collision_mask = 1
-role = "pickup"
-pickup_kind = "potion"
+metadata/role = "pickup"
+metadata/pickup_kind = "potion"
 
 [node name="PotDraw" type="Node2D" parent="World/Potion1"]
 script = ExtResource("4_potdraw")

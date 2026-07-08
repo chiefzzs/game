@@ -1,5 +1,5 @@
 extends Node2D
-## Headless runtime test for V01_InputCollisionTest (18 assertions)
+## Headless runtime test for V01_InputCollisionTest (28 assertions)
 var passed: int = 0
 var failed: int = 0
 var _test_scene: Node2D
@@ -87,27 +87,27 @@ func _phase3b_block_released() -> void:
 			if not nb.has(_gold1):
 				nb.append(_gold1)
 		if "hud" in _test_scene and _test_scene.has_method("hud"):
-			_test_scene.call("hud", "[PICKUP] nearby +%s" % _gold1.get("pickup_kind"))
-	_sched(0.2, _phase4_pickup_gold)
+			var pk: String = _gold1.get_meta("pickup_kind") if _gold1.has_meta("pickup_kind") else "?"
+			_test_scene.call("hud", "[PICKUP] nearby +%s" % pk)
+	# Check immediately (before next physics tick) that nearby >=1 — auto-pick has NOT run yet
+	var nb_arr_check: Array = _test_scene["_nearby_pickups"] if "_nearby_pickups" in _test_scene else []
+	_expect(nb_arr_check.size() >= 1, "After gold1 appended, nearby_pickups size=%d immediately (pre-auto-pick)" % nb_arr_check.size(), "nearby_pickups empty (size=%d) right after append" % nb_arr_check.size())
+	# Now wait 0.22s for _physics_process auto-pick loop to run
+	_sched(0.22, _phase4b_after_auto_pick_gold)
 
-func _phase4_pickup_gold() -> void:
-	var nearby: int = -1
-	var nb_arr: Array = _test_scene["_nearby_pickups"] if "_nearby_pickups" in _test_scene else []
-	nearby = nb_arr.size()
-	_expect(nearby >= 1, "After gold1 body_entered(player), nearby_pickups size=%d" % nearby, "nearby_pickups empty (size=%d) after setup" % nearby)
-	# Directly increment inventory (bypasses signal/call dispatch issues in headless) and refresh HUD.
-	if "_inventory_gold" in _test_scene:
-		_test_scene["_inventory_gold"] = 1
-	_test_scene.call("_refresh_inventory")
-	if _gold1 and _gold1.has_method("queue_free"):
-		_gold1.queue_free()
-	if _test_scene.has_method("hud"):
-		_test_scene.call("hud", "[PICKUP] +1 Gold (total 1)")
-	_sched(0.18, _phase4b_after_pick)
-
-func _phase4b_after_pick() -> void:
+func _phase4b_after_auto_pick_gold() -> void:
+	var nb_after: int = -1
+	var nb_arr2: Array = _test_scene["_nearby_pickups"] if "_nearby_pickups" in _test_scene else []
+	nb_after = nb_arr2.size()
+	var g_inv: int = int(_test_scene.get("_inventory_gold") if "_inventory_gold" in _test_scene else -99)
 	var g: String = _inv_gold.text if _inv_gold else "-1"
-	_expect(g == "1", "After InteractPressed -> Gold inventory becomes %s (expected 1)" % g, "Gold pickup didn't increment inventory: G=%s" % g)
+	var gold_gone: bool = true
+	if _gold1 and is_instance_valid(_gold1):
+		gold_gone = _gold1.is_queued_for_deletion()
+	_expect(nb_after == 0, "Auto-pickup emptied nearby_pickups (size=%d, expect 0)" % nb_after, "Auto-pickup did not run, nearby still has %d items" % nb_after)
+	_expect(g_inv == 1, "Auto-pickup -> internal Gold inventory =%d (expected 1)" % g_inv, "Auto-pickup gold count internal=%d (should be 1)" % g_inv)
+	_expect(g == "1", "HUD GoldVal shows %s (expected 1) after auto-pickup" % g, "HUD gold label wrong: G=%s" % g)
+	_expect(gold_gone, "Gold1 pickup vanished (queue_free/isntance_invalid=%s)" % str(gold_gone), "Gold1 still visible in scene after pickup, not freed!")
 	# Potion pickup next
 	if _pot1:
 		_player.position = _pot1.position
@@ -115,21 +115,24 @@ func _phase4b_after_pick() -> void:
 			var nb2: Array = _test_scene["_nearby_pickups"]
 			if not nb2.has(_pot1):
 				nb2.append(_pot1)
-	_sched(0.2, func():
-		# Directly increment potion inventory
-		if "_inventory_pot" in _test_scene:
-			_test_scene["_inventory_pot"] = 1
-		_test_scene.call("_refresh_inventory")
-		if _pot1 and _pot1.has_method("queue_free"):
-			_pot1.queue_free()
-		if _test_scene.has_method("hud"):
-			_test_scene.call("hud", "[PICKUP] +1 Potion (total 1)")
-	)
-	_sched(0.4, _phase4c_potion_picked)
+	# Check potion nearby immediately (pre auto-pick)
+	var nb_arr_p_check: Array = _test_scene["_nearby_pickups"] if "_nearby_pickups" in _test_scene else []
+	_expect(nb_arr_p_check.size() >= 1, "After Potion1 appended, nearby_pickups size=%d immediately (pre-auto)" % nb_arr_p_check.size(), "Potion nearby empty after append, size=%d" % nb_arr_p_check.size())
+	_sched(0.22, _phase4c_potion_picked)
 
 func _phase4c_potion_picked() -> void:
+	var nb_pot: int = -1
+	var nb_arr_p: Array = _test_scene["_nearby_pickups"] if "_nearby_pickups" in _test_scene else []
+	nb_pot = nb_arr_p.size()
+	var p_inv: int = int(_test_scene.get("_inventory_pot") if "_inventory_pot" in _test_scene else -99)
 	var p: String = _inv_pot.text if _inv_pot else "-1"
-	_expect(p == "1", "After Potion InteractPressed -> Potion inventory=%s (expected 1)" % p, "Potion pickup wrong Pot=%s" % p)
+	var pot_gone: bool = true
+	if _pot1 and is_instance_valid(_pot1):
+		pot_gone = _pot1.is_queued_for_deletion()
+	_expect(nb_pot == 0, "Auto-pickup potion -> nearby_pickups size=%d (expect 0)" % nb_pot, "Potion not auto-picked, nearby still %d" % nb_pot)
+	_expect(p_inv == 1, "Auto-pickup -> internal Potion inventory =%d (expected 1)" % p_inv, "Potion auto-pick internal count wrong: %d" % p_inv)
+	_expect(p == "1", "After Potion auto-pickup -> HUD PotionVal=%s (expected 1)" % p, "Potion pickup wrong Pot=%s" % p)
+	_expect(pot_gone, "Potion1 pickup vanished (queue_free/invalid=%s)" % str(pot_gone), "Potion1 still visible after pickup!")
 	# Phase5: teleport onto ladder + set _in_ladder_area=true + fire W (ui_up) -> climb mode
 	if _ladder:
 		_player.position = _ladder.position
