@@ -1,168 +1,207 @@
 extends "res://scripts/editor/CharacterBase.gd"
-## V0.3 EnemyBase.gd — 敌人AI基类: PATROL→CHASE→ATTACK→HURT→DEAD
-## 具体数值 WalkSoldier/JumpScout/Dummy 子类初始化
-## [注意] 无class_name声明，避免注册顺序依赖；子类使用extends路径字符串
+class_name EnemyBase
 
-const _CE := preload("res://scripts/config/CharacterEnums.gd")
-const _CDC := preload("res://scripts/combat/CombatDamageCalculator.gd")
+enum EnemyAIState {
+	PATROL = 0,
+	CHASE = 1,
+	ATTACK = 2,
+	RETREAT = 3
+}
 
-enum EAI { PATROL = 0, CHASE = 1, ATTACK = 2, GIVE_UP = 3 }
-var eai: EAI = EAI.PATROL
-var ai_cfg: Dictionary = {}
-var attack_cd_left: float = 0.0
+var enemy_ai_state: int = EnemyAIState.PATROL
+var home_pos: Vector2 = Vector2(820, 560)
+var patrol_left: float = 740.0
+var patrol_right: float = 900.0
+var chase_trigger: float = 150.0
+var attack_range_value: float = 60.0
+var retreat_radius: float = 360.0
 var patrol_dir: float = 1.0
-var patrol_timer: float = 0.0
-var training_dummy: bool = false
+var attack_cd_left: float = 0.0
+var state_timer: float = 0.0
+var flash_time: float = 0.0
+var weapon_cfg: Dictionary = {}
+
+const _ENEMY_LEGAL_TRANSITION: Dictionary = {
+	EnemyAIState.PATROL: [EnemyAIState.PATROL, EnemyAIState.CHASE, EnemyAIState.RETREAT],
+	EnemyAIState.CHASE:  [EnemyAIState.PATROL, EnemyAIState.CHASE, EnemyAIState.ATTACK, EnemyAIState.RETREAT],
+	EnemyAIState.ATTACK: [EnemyAIState.PATROL, EnemyAIState.CHASE, EnemyAIState.ATTACK, EnemyAIState.RETREAT],
+	EnemyAIState.RETREAT:[EnemyAIState.PATROL, EnemyAIState.CHASE, EnemyAIState.RETREAT]
+}
 
 func _ready() -> void:
-	kind = _CE.CharacterKind.ENEMY
+	super._ready()
+	kind = CharacterKind.ENEMY
 	collision_layer = 4
-	collision_mask = 8 | 1 | 2
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	rs.size = Vector2(26, 48)
-	cs.shape = rs
-	cs.position = Vector2(0, -24)
-	add_child(cs)
+	collision_mask = 1 | 2
+
+func setup_enemy(p_home: Vector2, cfg: Dictionary) -> void:
+	kind = CharacterKind.ENEMY
+	collision_layer = 4
+	collision_mask = 1 | 2
+	home_pos = p_home
+	global_position = home_pos
+	patrol_left = home_pos.x - abs(float(cfg.get("patrol_half", 80)))
+	patrol_right = home_pos.x + abs(float(cfg.get("patrol_half", 80)))
+	max_hp = int(cfg.get("max_hp", 100))
+	hp = max_hp
+	atk = int(cfg.get("base_atk", 10))
+	defense = int(cfg.get("base_def", 2))
+	move_speed = float(cfg.get("move_speed", 180))
+	jump_force = -460.0
+	gravity = 1800.0
+	chase_trigger = float(cfg.get("chase_trigger", 150))
+	attack_range_value = float(cfg.get("attack_range", 60))
+	retreat_radius = float(cfg.get("retreat_radius", 360))
+	weapon_cfg = cfg.get("weapon", {})
+	weapon = weapon_cfg
+	display_name = str(cfg.get("display_name", "敌人"))
+	set_meta("enemy_home", home_pos)
+	queue_redraw()
+
+func _set_ai(to: int) -> Error:
+	if enemy_ai_state == to:
+		return OK
+	var allowed: Array = _ENEMY_LEGAL_TRANSITION.get(enemy_ai_state, [])
+	if not allowed.has(to):
+		return ERR_INVALID_DATA
+	enemy_ai_state = to
+	state_timer = 0.0
+	queue_redraw()
+	return OK
 
 func _physics_process(delta: float) -> void:
-	if state == _CE.BaseState.DEAD:
+	if state == FSMState.DEAD:
 		tick_state(delta)
-		if state_timer >= float(ConfigManager.cfg_get("state_thresholds.dead_despawn_sec", 2.5)) if ConfigManager else 2.5:
-			_on_despawn()
 		return
-	velocity.y += 1800.0 * delta
-	velocity.y = clamp(velocity.y, -2000.0, -1200.0)
+	state_timer += delta
+	if attack_cd_left > 0.0:
+		attack_cd_left = max(0.0, attack_cd_left - delta)
+	if flash_time > 0.0:
+		flash_time = max(0.0, flash_time - delta)
+		queue_redraw()
+	var in_tree: bool = (get_tree() != null and is_inside_tree())
+	if in_tree:
+		gravity_apply(delta)
+	ai_decision_tick(delta)
 	tick_state(delta)
-	attack_cd_left = max(0.0, attack_cd_left - delta)
-	patrol_timer += delta
-	if not training_dummy:
-		_enemy_ai(delta)
-	move_and_slide()
+	if in_tree:
+		regenerate_stamina(delta, state == FSMState.BLOCK)
 
-func _enemy_ai(delta: float) -> void:
-	var target := _find_nearest_player_or_companion(float(ai_cfg.get("give_up_radius", 420)))
-	var target_pos: Vector2 = (target.global_position if target else global_position)
-	var to_target: Vector2 = target_pos - global_position
-	var dist: float = to_target.length() if target else 9999.0
-	var aggro: float = float(ai_cfg.get("aggro_radius", 240))
-	var atk_r: float = float(ai_cfg.get("attack_range", 48))
-	match eai:
-		EAI.PATROL:
-			_do_patrol(delta)
-			if target and dist <= aggro:
-				eai = EAI.CHASE
-		EAI.CHASE:
-			if target == null:
-				eai = EAI.PATROL
-			elif dist >= float(ai_cfg.get("give_up_radius", 420)):
-				eai = EAI.GIVE_UP
-			elif dist <= atk_r:
-				eai = EAI.ATTACK
-			else:
-				facing = 1.0 if to_target.x >= 0.0 else -1.0
-				velocity.x = move_toward(velocity.x, sign(to_target.x) * move_speed, 1500.0 * delta)
-				if jump_force < 0.0 and is_on_floor() and to_target.y < -40.0 and randf() < float(ai_cfg.get("auto_jump_chance", 0.1)):
-					velocity.y = jump_force
-				if is_on_floor() and state != _CE.BaseState.RUN:
-					change_state(_CE.BaseState.RUN)
-		EAI.ATTACK:
-			if target == null:
-				eai = EAI.PATROL
-			elif dist >= float(ai_cfg.get("give_up_radius", 420)):
-				eai = EAI.GIVE_UP
-			elif dist > atk_r + 6.0:
-				eai = EAI.CHASE
-			else:
-				facing = 1.0 if to_target.x >= 0.0 else -1.0
-				velocity.x = move_toward(velocity.x, 0.0, 1500.0 * delta)
-				if attack_cd_left <= 0.0 and state != _CE.BaseState.HURT:
-					_perform_attack(target)
-					var cdr: float = float(weapon.get("cd_sec", 1.0)) if typeof(weapon)==TYPE_DICTIONARY else 1.0
-					attack_cd_left = cdr
-		EAI.GIVE_UP:
-			_do_patrol(delta)
-			if target and dist <= aggro * 0.6:
-				eai = EAI.CHASE
-			elif patrol_timer > 2.0:
-				patrol_timer = 0.0
-				eai = EAI.PATROL
+func gravity_apply(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y += gravity * delta
 
-func _do_patrol(delta: float) -> void:
-	var pr: float = float(ai_cfg.get("patrol_radius", 120))
-	if pr <= 0.0:
-		velocity.x = move_toward(velocity.x, 0.0, 1500.0 * delta)
-		if is_on_floor() and state != _CE.BaseState.IDLE:
-			change_state(_CE.BaseState.IDLE)
+func ai_decision_tick(_delta: float) -> void:
+	var player := _find_nearest_player()
+	var me: Vector2 = global_position
+	var dist_home: float = abs(me.x - home_pos.x)
+	if player != null:
+		var player_pos: Vector2 = player.global_position
+		var dist_player: float = me.distance_to(player_pos)
+		if dist_player < attack_range_value and attack_cd_left <= 0.0:
+			_set_ai(EnemyAIState.ATTACK)
+			_do_attack(player)
+			return
+		elif dist_player < chase_trigger:
+			_set_ai(EnemyAIState.CHASE)
+			_move_toward(player_pos)
+			return
+	if dist_home > retreat_radius:
+		_set_ai(EnemyAIState.RETREAT)
+		_move_toward(home_pos)
 		return
-	if patrol_timer > 2.0:
-		patrol_timer = 0.0
-		if randf() < 0.4:
-			patrol_dir = -patrol_dir
+	_set_ai(EnemyAIState.PATROL)
+	_do_patrol()
+
+func _do_patrol() -> void:
+	var in_tree: bool = (get_tree() != null and is_inside_tree())
+	if in_tree and not is_on_floor():
+		return
+	var dt: float = 0.016
+	if in_tree:
+		dt = get_physics_process_delta_time()
+	var x: float = global_position.x
+	if x < patrol_left:
+		patrol_dir = 1.0
+	elif x > patrol_right:
+		patrol_dir = -1.0
 	facing = patrol_dir
-	velocity.x = move_toward(velocity.x, patrol_dir * move_speed * 0.5, 1500.0 * delta)
-	if is_on_floor() and abs(velocity.x) > 5.0 and state != _CE.BaseState.RUN:
-		change_state(_CE.BaseState.RUN)
-	elif is_on_floor() and abs(velocity.x) <= 5.0 and state != _CE.BaseState.IDLE:
-		change_state(_CE.BaseState.IDLE)
+	var want: float = patrol_dir * move_speed * 0.55
+	velocity.x = move_toward(velocity.x, want, 1200.0 * dt)
+	if state == FSMState.IDLE or state == FSMState.RUN:
+		change_state(FSMState.RUN)
 
-func _perform_attack(target: Node) -> void:
-	if state == _CE.BaseState.ATTACK1 or state == _CE.BaseState.HURT or state == _CE.BaseState.DEAD:
+func _move_toward(dest: Vector2) -> void:
+	var in_tree: bool = (get_tree() != null and is_inside_tree())
+	if in_tree and not is_on_floor():
 		return
-	change_state(_CE.BaseState.ATTACK1)
-	var raw_atk: int = base_atk
-	var atk_mult: float = 1.0
-	if typeof(weapon) == TYPE_DICTIONARY:
-		atk_mult = float(weapon.get("atk_mult", 1.0))
-	var dir: Vector2 = Vector2(facing, 0.0)
-	var sb: bool = bool(weapon.get("break_shield", false)) if typeof(weapon)==TYPE_DICTIONARY else false
-	_CDC.calculate(self, target, raw_atk, "physical", dir, sb, atk_mult)
-	if target and target.has_method("take_damage"):
-		target.take_damage(self, raw_atk, "physical", dir, sb)
+	var dt: float = 0.016
+	if in_tree:
+		dt = get_physics_process_delta_time()
+	var dx: float = dest.x - global_position.x
+	if abs(dx) < 4.0:
+		velocity.x = move_toward(velocity.x, 0.0, 2000.0 * dt)
+		return
+	facing = 1.0 if dx >= 0.0 else -1.0
+	velocity.x = move_toward(velocity.x, facing * move_speed, 1600.0 * dt)
+	if state == FSMState.IDLE or state == FSMState.RUN:
+		change_state(FSMState.RUN)
 
-func _find_nearest_player_or_companion(max_dist: float) -> CharacterBase:
-	var space := get_world_2d().direct_space_state
-	if space == null:
+func _do_attack(player: Node2D) -> void:
+	if attack_cd_left > 0.0:
+		return
+	if state == FSMState.ATTACK1 or state == FSMState.HURT:
+		return
+	var r: Error = change_state(FSMState.ATTACK1)
+	if r != OK:
+		return
+	attack_cd_left = float(weapon_cfg.get("cd_sec", 1.1))
+	var opts: Dictionary = {
+		"_use_cdc": true, "damage_type": "physical",
+		"knockback": float(weapon_cfg.get("knockback", 90)),
+		"hitstun": 0.12,
+		"weapon_break_shield": bool(weapon_cfg.get("break_shield", false)),
+		"attacker_weapon_mult": float(weapon_cfg.get("atk_mult", 1.0)),
+	}
+	if player != null and is_instance_valid(player) and player.has_method("take_damage"):
+		player.take_damage(atk, self, opts)
+	queue_redraw()
+
+func _find_nearest_player() -> Node2D:
+	var best: Node2D = null
+	var best_d: float = 99999.0
+	var tree: SceneTree = get_tree()
+	if tree == null or tree.root == null:
 		return null
-	var params := PhysicsShapeQueryParameters2D.new()
-	var cs := CircleShape2D.new()
-	cs.radius = max_dist
-	params.shape = cs
-	params.transform = Transform2D(0.0, global_position)
-	params.collision_mask = 1 | 2 # player + companion
-	var hits := space.intersect_shape(params, 16)
-	var best: CharacterBase = null
-	var best_d: float = max_dist
-	for h in hits:
-		var c := h.get("collider")
-		if c == null or (c as CharacterBase and (c as CharacterBase).alive == false):
+	var all: Array = tree.root.get_nodes_in_group("player")
+	for n in all:
+		if n == self or not is_instance_valid(n):
 			continue
-		if c == self:
-			continue
-		var dd := global_position.distance_to(c.global_position)
-		if dd < best_d:
-			best_d = dd
-			best = c
+		var d: float = global_position.distance_to(n.global_position)
+		if d < best_d:
+			best_d = d
+			best = n
 	return best
 
-func _on_despawn() -> void:
-	if training_dummy:
-		return
-	if PickupSystem:
-		var dg = ai_cfg.get("drop_gold", [0,0])
-		if typeof(dg) == TYPE_ARRAY and dg.size() >= 2:
-			var lo := int(dg[0]); var hi := int(dg[1])
-			var val := lo if lo == hi else randi_range(lo, hi)
-			if val > 0:
-				PickupSystem.spawn_drop(global_position, "gold", val)
-		if randf() < float(ai_cfg.get("drop_potion_chance", 0.0)):
-			PickupSystem.spawn_drop(global_position, "potion_hp", 25)
-	queue_free()
+func tick_state(_delta: float) -> void:
+	if get_tree() != null and is_inside_tree():
+		move_and_slide()
+	queue_redraw()
 
-func _on_death(killer: Node) -> void:
-	super._on_death(killer)
-	if training_dummy:
-		hp = max_hp
-		alive = true
-		change_state(_CE.BaseState.IDLE)
-		return
+func take_damage(dmg: int, attacker: Node = null, opts: Dictionary = {}) -> int:
+	flash_time = 0.08
+	var ret_int: int = super.take_damage(dmg, attacker, opts)
+	var in_tree: bool = (get_tree() != null and is_inside_tree())
+	if in_tree:
+		var ge: Node = _autoload("GameEvents")
+		if ge != null:
+			if ge.has_signal("enemy_damaged"):
+				var is_cr: bool = bool(opts.get("is_crit", false))
+				var is_bs: bool = bool(opts.get("is_backstab", false))
+				ge.emit_signal("enemy_damaged", self, float(ret_int), is_cr, is_bs)
+			if ge.has_signal("damage_taken"):
+				var is_cr2: bool = bool(opts.get("is_crit", false))
+				var is_bs2: bool = bool(opts.get("is_backstab", false))
+				ge.emit_signal("damage_taken", self, float(ret_int), is_cr2, is_bs2)
+	queue_redraw()
+	return ret_int

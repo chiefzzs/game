@@ -1,0 +1,68 @@
+[gd_scene load_steps=2 format=3 uid="uid://v03fenemydemo09"]
+
+[ext_resource type="Script" path="res://scenes/test/V03f_EnemyDemo.gd" id="1_script"]
+
+[node name="V03f_EnemyDemo" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Vb" type="VBoxContainer" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="PanelContainer" parent="Vb"]
+custom_minimum_size = Vector2(1920, 90)
+
+[node name="HbTop" type="HBoxContainer" parent="Vb/TopBar"]
+theme_override_constants/separation = 10
+
+[node name="LblTitle" type="Label" parent="Vb/TopBar/HbTop"]
+custom_minimum_size = Vector2(1060, 30)
+text = "⚔ V0.3f 敌人AI实战 + 伤害浮字"
+
+[node name="LblEnemyAi" type="Label" parent="Vb/TopBar/HbTop"]
+custom_minimum_size = Vector2(640, 30)
+text = "敌人 AI: PATROL 巡逻"
+
+[node name="EnemyAiColor" type="ColorRect" parent="Vb/TopBar/HbTop"]
+custom_minimum_size = Vector2(34, 30)
+color = Color(0.3, 0.9, 0.45, 1)
+
+[node name="HbHp" type="HBoxContainer" parent="Vb/TopBar"]
+theme_override_constants/separation = 12
+
+[node name="BarPlayer" type="ProgressBar" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(280, 26)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="LblPlayerHp" type="Label" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(260, 26)
+text = "农夫 HP: 100/100"
+
+[node name="BarEnemy" type="ProgressBar" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(280, 26)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="LblEnemyHp" type="Label" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(320, 26)
+text = "史莱姆·绿滴 HP: 100/100"
+
+[node name="LblHintEsc" type="Label" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(260, 26)
+text = "🏠 Esc/鼠标中键=回主菜单"
+
+[node name="WorldRoot" type="Node2D" parent="Vb"]
+
+[node name="PlayerSpawn" type="Marker2D" parent="Vb/WorldRoot"]
+position = Vector2(300, 640)
+
+[node name="EnemySpawn" type="Marker2D" parent="Vb/WorldRoot"]
+position = Vector2(820, 640)
+
+[node name="HitFlyerLayer" type="Node2D" parent="Vb/WorldRoot"]
