@@ -140,7 +140,7 @@ func _spawn_all() -> void:
 	for i in range(3):
 		var c: CharacterBody2D = CharacterBody2D.new()
 		c.set_script(scripts[i])
-		c.position = Vector2(xs[i], 360)
+		c.position = Vector2(xs[i], 355)
 		c.set("is_active_controllable", false)
 		add_child(c)
 		characters.append(c)

@@ -182,9 +182,9 @@ func _find_nearest_player() -> Node2D:
 	var best: Node2D = null
 	var best_d: float = 99999.0
 	var tree: SceneTree = get_tree()
-	if tree == null or tree.root == null:
+	if tree == null:
 		return null
-	var all: Array = tree.root.get_nodes_in_group("player")
+	var all: Array = tree.get_nodes_in_group("player")
 	for n in all:
 		if n == self or not is_instance_valid(n):
 			continue

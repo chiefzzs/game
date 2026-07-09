@@ -182,7 +182,7 @@ func _setup_ui() -> void:
 func _spawn_player() -> void:
 	player = CharacterBody2D.new()
 	player.set_script(_FARMER_SCRIPT)
-	player.position = Vector2(960, 360)
+	player.position = Vector2(960, 355)
 	world_root.add_child(player)
 
 func _call_deferred_start_first() -> void:
@@ -254,7 +254,7 @@ func _spawn_wave_enemies(idx: int, n: int) -> void:
 		e.set_script(_SLIME_SCRIPT)
 		var xi: int = clamp(i, 0, base_xs.size() - 1)
 		var px: float = base_xs[xi] + float(idx * 28) + randf_range(-30.0, 30.0)
-		var home := Vector2(px, 360)
+		var home := Vector2(px, 355)
 		e.position = home
 		world_root.add_child(e)
 		if not enemies_alive.has(e):

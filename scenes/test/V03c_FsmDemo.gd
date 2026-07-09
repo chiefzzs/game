@@ -61,7 +61,7 @@ func _SpawnDummy() -> void:
 	d.atk = 0
 	d.no_die = false  # 允许死亡（演示 DEAD 自锁）
 	d.kind = d.CharacterKind.ENEMY
-	d.global_position = Vector2(960, 360)
+	d.global_position = Vector2(960, 355)
 	dummy_spawn.add_child(d)
 	if d.has_signal("hp_changed"):
 		d.hp_changed.connect(_OnHpChg)
