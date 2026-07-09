@@ -28,16 +28,16 @@ func _ready() -> void:
 	btn_settings.pressed.connect(_OnSettings)
 	btn_workshop.pressed.connect(_OnWorkshop)
 	btn_tcfg.pressed.connect(func():
-		AppendLog("🧪 跳转到 Config 验收测试 (F1/F2/F3/F4可切场景)")
+		AppendLog("🧪 V0.1 跳转到 Config 验收测试 (F1/F2/F3/F4可切场景)")
 		get_tree().change_scene_to_file("res://scenes/test/V01_ConfigTest.tscn"))
 	btn_tflags.pressed.connect(func():
-		AppendLog("🧪 跳转到 ProgressFlags 验收测试")
+		AppendLog("🧪 V0.1 跳转到 ProgressFlags 验收测试")
 		get_tree().change_scene_to_file("res://scenes/test/V01_FlagsTest.tscn"))
 	btn_tsave.pressed.connect(func():
-		AppendLog("🧪 跳转到 SaveSlotManager 验收测试")
+		AppendLog("🧪 V0.1 跳转到 SaveSlotManager 验收测试")
 		get_tree().change_scene_to_file("res://scenes/test/V01_SaveTest.tscn"))
 	btn_tinput.pressed.connect(func():
-		AppendLog("🧪 跳转到 输入+碰撞 测试（A/D移动 Space跳 LT格挡）")
+		AppendLog("🧪 V0.1 跳转到 输入+碰撞 测试（A/D移动 Space跳 LT格挡）")
 		get_tree().change_scene_to_file("res://scenes/test/V01_InputCollisionTest.tscn"))
 	btn_tdamage.pressed.connect(func():
 		AppendLog("🔥 V0.3b 伤害演示：7 步流水线 + 颜色浮动文字模拟（6按钮看典型结果）")
@@ -72,7 +72,7 @@ func _ready() -> void:
 		AppendLog("   操作步骤：V0.3i用户手册 5步 — J连击+K格挡4次+30s内全歼+0死亡 冲击 S 评级；Esc回主菜单")
 		get_tree().change_scene_to_file("res://scenes/test/V03i_KdaDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
-	AppendLog("> 进入主菜单（V0.3i），测试区 13 按钮：蓝×4 + 金(V0.3b)+橙(V0.3c)+绿(V0.3d玩家)+紫(V0.3e樵夫)+橙(V0.3f敌人AI)+金(V0.3g编队)+紫(V0.3h通关)+青绿(V0.3i KDA结算)~")
+	AppendLog("> 进入主菜单（V0.3i），测试区 13 按钮：V0.1蓝×4 + 金(V0.3b)+橙(V0.3c)+绿(V0.3d玩家)+紫(V0.3e樵夫)+橙(V0.3f敌人AI)+金(V0.3g编队)+紫(V0.3h通关)+青绿(V0.3i KDA结算)~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")
 	InputBus.PausePressed.connect(func(): AppendLog("⏸ InputBus.PausePressed 信号触发（Esc/Start）"))
 
