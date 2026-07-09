@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://b0arrow0001"]
+
+[ext_resource type="Script" path="res://scenes/test/Arrow.gd" id="1_arrow_ai"]
+[ext_resource type="Script" path="res://scenes/test/DrawArrow.gd" id="2_arrow_draw"]
+
+[sub_resource type="RectangleShape2D" id="RectShape_arrow"]
+size = Vector2(38, 6)
+
+[node name="Arrow" type="Area2D"]
+collision_layer = 0
+collision_mask = 15
+monitoring = true
+monitorable = true
+script = ExtResource("1_arrow_ai")
+
+[node name="Drawer" type="Node2D" parent="."]
+script = ExtResource("2_arrow_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="."]
+shape = SubResource("RectShape_arrow")

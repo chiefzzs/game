@@ -21,6 +21,8 @@ var is_active_controllable: bool = true  # V0.3g: 编队切换时非active角色
 
 func _ready() -> void:
 	kind = _CE.CharacterKind.PLAYER
+	if not "facing" in self or facing == 0.0:
+		facing = 1.0
 	InputBus.AxisChanged.connect(_on_axis)
 	InputBus.JumpPressed.connect(_on_jump_pressed)
 	InputBus.JumpReleased.connect(_on_jump_rel)

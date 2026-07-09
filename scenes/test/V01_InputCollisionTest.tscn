@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://b0inputtest001"]
+[gd_scene load_steps=19 format=3 uid="uid://b0inputtest001"]
 
 [ext_resource type="Script" path="res://scenes/test/V01_InputCollisionTest.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/test/DrawPlayerSimple.gd" id="2_drawplayer"]
@@ -9,6 +9,13 @@
 [ext_resource type="Script" path="res://scenes/test/Scarecrow.gd" id="7_scarecrow_ai"]
 [ext_resource type="Script" path="res://scenes/test/DrawScarecrow.gd" id="8_scarecrow_draw"]
 [ext_resource type="Script" path="res://scenes/test/DrawEnemyRect.gd" id="9_enemy_rect"]
+[ext_resource type="Script" path="res://scenes/test/Woodcutter.gd" id="10_woodcutter_ai"]
+[ext_resource type="Script" path="res://scenes/test/DrawWoodcutter.gd" id="11_woodcutter_draw"]
+[ext_resource type="Script" path="res://scenes/test/EliteScarecrow.gd" id="12_elite_ai"]
+[ext_resource type="Script" path="res://scenes/test/DrawEliteShield.gd" id="13_elite_draw"]
+[ext_resource type="Script" path="res://scenes/test/Archer.gd" id="14_archer_ai"]
+[ext_resource type="Script" path="res://scenes/test/DrawArcher.gd" id="15_archer_draw"]
+[ext_resource type="Script" path="res://scenes/test/DrawWoodSword.gd" id="16_sworddraw"]
 
 [sub_resource type="RectangleShape2D" id="RectShape_player"]
 size = Vector2(28, 48)
@@ -29,7 +36,10 @@ radius = 20.0
 radius = 24.0
 
 [sub_resource type="RectangleShape2D" id="RectShape_skr"]
-size = Vector2(38, 60)
+size = Vector2(28, 48)
+
+[sub_resource type="RectangleShape2D" id="RectShape_woodcutter"]
+size = Vector2(28, 48)
 
 [sub_resource type="RectangleShape2D" id="RectShape_atk"]
 size = Vector2(48, 46)
@@ -103,52 +113,6 @@ collision_mask = 0
 [node name="Coll" type="CollisionShape2D" parent="World/Ground"]
 shape = SubResource("RectShape_ground")
 
-[node name="Platform1Bg" type="ColorRect" parent="World"]
-offset_left = 640.0
-offset_top = 798.0
-offset_right = 920.0
-offset_bottom = 822.0
-color = Color(0.45, 0.34, 0.24, 1)
-
-[node name="Platform1" type="StaticBody2D" parent="World"]
-position = Vector2(780, 810)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Coll" type="CollisionShape2D" parent="World/Platform1"]
-shape = SubResource("RectShape_plat")
-
-[node name="Platform2Bg" type="ColorRect" parent="World"]
-offset_left = 1060.0
-offset_top = 688.0
-offset_right = 1340.0
-offset_bottom = 712.0
-color = Color(0.45, 0.34, 0.24, 1)
-
-[node name="Platform2" type="StaticBody2D" parent="World"]
-position = Vector2(1200, 700)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Coll" type="CollisionShape2D" parent="World/Platform2"]
-shape = SubResource("RectShape_plat")
-
-[node name="LadderBg" type="ColorRect" parent="World"]
-offset_left = 390.0
-offset_top = 580.0
-offset_right = 450.0
-offset_bottom = 900.0
-color = Color(0.5, 0.4, 0.25, 1)
-
-[node name="Ladder" type="Area2D" parent="World"]
-position = Vector2(420, 740)
-collision_layer = 64
-collision_mask = 1
-metadata/role = "ladder"
-
-[node name="Coll" type="CollisionShape2D" parent="World/Ladder"]
-shape = SubResource("RectShape_ladder")
-
 [node name="Gold1" type="Area2D" parent="World"]
 position = Vector2(830, 768)
 collision_layer = 32
@@ -219,6 +183,85 @@ script = ExtResource("7_scarecrow_ai")
 script = ExtResource("9_enemy_rect")
 
 [node name="Coll" type="CollisionShape2D" parent="World/Scarecrow2"]
+shape = SubResource("RectShape_skr")
+
+[node name="Scarecrow3" type="CharacterBody2D" parent="World"]
+position = Vector2(2050, 850)
+script = ExtResource("7_scarecrow_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Scarecrow3"]
+script = ExtResource("9_enemy_rect")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Scarecrow3"]
+shape = SubResource("RectShape_skr")
+
+[node name="Scarecrow4" type="CharacterBody2D" parent="World"]
+position = Vector2(2650, 580)
+script = ExtResource("7_scarecrow_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Scarecrow4"]
+script = ExtResource("9_enemy_rect")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Scarecrow4"]
+shape = SubResource("RectShape_skr")
+
+[node name="Scarecrow5" type="CharacterBody2D" parent="World"]
+position = Vector2(3250, 850)
+script = ExtResource("7_scarecrow_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Scarecrow5"]
+script = ExtResource("9_enemy_rect")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Scarecrow5"]
+shape = SubResource("RectShape_skr")
+
+[node name="EliteScarecrow1" type="CharacterBody2D" parent="World"]
+position = Vector2(1800, 850)
+script = ExtResource("12_elite_ai")
+
+[node name="Drawer" type="Node2D" parent="World/EliteScarecrow1"]
+script = ExtResource("13_elite_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/EliteScarecrow1"]
+shape = SubResource("RectShape_skr")
+
+[node name="Woodcutter" type="CharacterBody2D" parent="World"]
+position = Vector2(720, 800)
+collision_layer = 8
+collision_mask = 4
+monitorable = true
+script = ExtResource("10_woodcutter_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Woodcutter"]
+script = ExtResource("11_woodcutter_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Woodcutter"]
+shape = SubResource("RectShape_woodcutter")
+
+[node name="Archer1" type="CharacterBody2D" parent="World"]
+position = Vector2(2800, 850)
+collision_layer = 2
+collision_mask = 4
+monitorable = true
+script = ExtResource("14_archer_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Archer1"]
+script = ExtResource("15_archer_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Archer1"]
+shape = SubResource("RectShape_skr")
+
+[node name="Archer2" type="CharacterBody2D" parent="World"]
+position = Vector2(3800, 850)
+collision_layer = 2
+collision_mask = 4
+monitorable = true
+script = ExtResource("14_archer_ai")
+
+[node name="Drawer" type="Node2D" parent="World/Archer2"]
+script = ExtResource("15_archer_draw")
+
+[node name="Coll" type="CollisionShape2D" parent="World/Archer2"]
 shape = SubResource("RectShape_skr")
 
 [node name="Player" type="CharacterBody2D" parent="World"]
@@ -298,11 +341,17 @@ color = Color(1, 1, 0.45, 1)
 [node name="WeaponHolder" type="Node2D" parent="World/Player"]
 position = Vector2(14, 6)
 rotation = -0.95
-visible = false
+visible = true
 
 [node name="RakeSprite" type="Node2D" parent="World/Player/WeaponHolder"]
 position = Vector2(0, -10)
+visible = false
 script = ExtResource("6_rakedraw")
+held = true
+
+[node name="WoodSwordSprite" type="Node2D" parent="World/Player/WeaponHolder"]
+position = Vector2(0, -10)
+script = ExtResource("16_sworddraw")
 held = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player"]

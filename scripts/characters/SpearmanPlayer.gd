@@ -96,3 +96,6 @@ func _draw() -> void:
 		draw_colored_polygon(p, Color(0.9, 0.4, 0.4, 0.9))
 	if is_invincible and int(Time.get_ticks_msec() / 80) % 2 == 0:
 		draw_rect(Rect2(-17, -36, 34, 70), Color(1,1,1,0.15), true)
+
+func _process(_delta: float) -> void:
+	queue_redraw()
