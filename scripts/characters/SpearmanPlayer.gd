@@ -30,6 +30,16 @@ func _ready() -> void:
 	cs.shape = rs
 	cs.position = Vector2(0, -25)
 	add_child(cs)
+	var cam := Camera2D.new()
+	cam.current = true
+	cam.position_smoothing_enabled = true
+	cam.position_smoothing_speed = 10.0
+	cam.zoom = Vector2(1.0, 1.0)
+	cam.limit_left = -1000000
+	cam.limit_right = 1000000
+	cam.limit_top = -1000000
+	cam.limit_bottom = 1000000
+	add_child(cam)
 	queue_redraw()
 
 func _draw() -> void:

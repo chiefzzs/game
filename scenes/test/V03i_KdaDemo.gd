@@ -29,6 +29,15 @@ var combo_root: Control
 var combo_lbl_c: Label
 var combo_lbl_max: Label
 
+var _floor_right_x: float = 0.0
+var _floor_left_x: float = 0.0
+const _FLOOR_CHUNK: float = 3000.0
+const _FLOOR_TOP_Y: float = 360.0
+const _EXTEND_TRIGGER: float = 600.0
+const _FLOOR_H: float = 120.0
+const _GRASS_STEP: float = 192.0
+const _TREE_STEP: float = 310.0
+
 func _ready() -> void:
 	randomize()
 	_setup_floor()
@@ -46,6 +55,67 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_cancel"):
 		get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
 
+func _physics_process(delta: float) -> void:
+	if player != null and is_instance_valid(player):
+		_ensure_floor_around(player.global_position.x)
+
+func _ensure_floor_around(x: float) -> void:
+	var need_left: float = x - 1200.0
+	var need_right: float = x + 1200.0
+	while _floor_left_x > need_left:
+		var new_left: float = _floor_left_x - _FLOOR_CHUNK
+		_build_floor_chunk(new_left, _floor_left_x)
+		_floor_left_x = new_left
+	while _floor_right_x < need_right:
+		var new_right: float = _floor_right_x + _FLOOR_CHUNK
+		_build_floor_chunk(_floor_right_x, new_right)
+		_floor_right_x = new_right
+
+func _build_floor_chunk(x0: float, x1: float) -> void:
+	if x1 <= x0:
+		return
+	var w: float = x1 - x0
+	var cx: float = (x0 + x1) * 0.5
+	var cy: float = _FLOOR_TOP_Y + _FLOOR_H * 0.5
+	var st := StaticBody2D.new()
+	var cs := CollisionShape2D.new()
+	var rs := RectangleShape2D.new()
+	rs.size = Vector2(w, _FLOOR_H)
+	cs.shape = rs
+	cs.position = Vector2(cx, cy)
+	st.add_child(cs)
+	floor_root.add_child(st)
+	var floor_bg := ColorRect.new()
+	floor_bg.position = Vector2(x0, _FLOOR_TOP_Y)
+	floor_bg.size = Vector2(w, _FLOOR_H)
+	floor_bg.color = Color(0.2, 0.32, 0.22)
+	floor_root.add_child(floor_bg)
+	var g_start: int = int(ceil(x0 / _GRASS_STEP))
+	var g_end: int = int(floor(x1 / _GRASS_STEP))
+	for i in range(g_start, g_end + 1):
+		var gx: float = float(i) * _GRASS_STEP
+		var grass := ColorRect.new()
+		grass.position = Vector2(gx, _FLOOR_TOP_Y - 4.0)
+		grass.size = Vector2(110, 8)
+		grass.color = Color(0.3, 0.55, 0.3)
+		floor_root.add_child(grass)
+	var t_start: int = int(ceil((x0 - 60.0) / _TREE_STEP))
+	var t_end: int = int(floor((x1 - 60.0) / _TREE_STEP))
+	for i in range(t_start, t_end + 1):
+		var base_x: float = 60.0 + float(i) * _TREE_STEP
+		if base_x < x0 or base_x > x1:
+			continue
+		var tree := ColorRect.new()
+		tree.position = Vector2(base_x, _FLOOR_TOP_Y - 180.0)
+		tree.size = Vector2(70, 180)
+		tree.color = Color(0.22, 0.42, 0.22)
+		floor_root.add_child(tree)
+		var leaf := ColorRect.new()
+		leaf.position = Vector2(base_x - 20.0, _FLOOR_TOP_Y - 220.0)
+		leaf.size = Vector2(110, 90)
+		leaf.color = Color(0.3, 0.65, 0.3)
+		floor_root.add_child(leaf)
+
 func _setup_floor() -> void:
 	floor_root = Node2D.new()
 	floor_root.name = "FloorRoot"
@@ -56,25 +126,11 @@ func _setup_floor() -> void:
 	flyers_layer = Node2D.new()
 	flyers_layer.name = "Flyers"
 	world_root.add_child(flyers_layer)
-	var st := StaticBody2D.new()
-	var cs := CollisionShape2D.new()
-	var rs := RectangleShape2D.new()
-	rs.size = Vector2(1920, 120)
-	cs.shape = rs
-	cs.position = Vector2(960, 420)
-	st.add_child(cs)
-	floor_root.add_child(st)
-	var floor_bg := ColorRect.new()
-	floor_bg.position = Vector2(0, 360)
-	floor_bg.size = Vector2(1920, 120)
-	floor_bg.color = Color(0.2, 0.32, 0.22)
-	floor_root.add_child(floor_bg)
-	for i in range(10):
-		var grass := ColorRect.new()
-		grass.position = Vector2(float(i) * 192.0, 356)
-		grass.size = Vector2(110, 8)
-		grass.color = Color(0.3, 0.55, 0.3)
-		floor_root.add_child(grass)
+	_floor_left_x = 0.0
+	_floor_right_x = 0.0
+	_build_floor_chunk(0.0, 6000.0)
+	_floor_left_x = 0.0
+	_floor_right_x = 6000.0
 
 func _setup_ui() -> void:
 	var cl := CanvasLayer.new()
