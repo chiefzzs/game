@@ -16,6 +16,7 @@ extends Control
 @onready var btn_enemydemo: Button = $VBoxContainer/HSep2/BtnEnemyDemo
 @onready var btn_partydemo: Button = $VBoxContainer/BtnPartyDemo
 @onready var btn_wavedemo: Button = $VBoxContainer/BtnWaveDemo
+@onready var btn_kdademo: Button = $VBoxContainer/BtnKdaDemo
 @onready var btn_quit: Button = $VBoxContainer/BtnQuit
 @onready var lbl_log: Label = $VBoxContainer/LblLog
 
@@ -66,8 +67,12 @@ func _ready() -> void:
 		AppendLog("🏆 V0.3h 多波次通关：3波(1/2/3史莱姆)+敌人头顶3段色HP条+受击闪红+通关卡片(击杀/耗时/评价)")
 		AppendLog("   操作步骤：手册H.5步 — 走近敌人J攻击，Esc随时回菜单；通关后卡片点按钮/Esc回")
 		get_tree().change_scene_to_file("res://scenes/test/V03h_WaveDemo.tscn"))
+	btn_kdademo.pressed.connect(func():
+		AppendLog("🏅 V0.3i KDA结算升级：左下KDA(K/D/B)实时HUD + 右上Combo HUD(5级绿/10级金/20级紫) + 🏆胜利卡KDA明细+S/A/B/C/D综合评级")
+		AppendLog("   操作步骤：V0.3i用户手册 5步 — J连击+K格挡4次+30s内全歼+0死亡 冲击 S 评级；Esc回主菜单")
+		get_tree().change_scene_to_file("res://scenes/test/V03i_KdaDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
-	AppendLog("> 进入主菜单（V0.3h），测试区 12 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c) + 绿(V0.3d玩家) + 紫(V0.3e樵夫) + 橙(V0.3f敌人AI) + 金(V0.3g编队) + 紫(V0.3h通关)~")
+	AppendLog("> 进入主菜单（V0.3i），测试区 13 按钮：蓝×4 + 金(V0.3b)+橙(V0.3c)+绿(V0.3d玩家)+紫(V0.3e樵夫)+橙(V0.3f敌人AI)+金(V0.3g编队)+紫(V0.3h通关)+青绿(V0.3i KDA结算)~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")
 	InputBus.PausePressed.connect(func(): AppendLog("⏸ InputBus.PausePressed 信号触发（Esc/Start）"))
 

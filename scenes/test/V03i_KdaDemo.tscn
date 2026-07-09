@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0v03i_kda_demo_009"]
+
+[ext_resource type="Script" path="res://scenes/test/V03i_KdaDemo.gd" id="1_kda_demo"]
+
+[node name="V03i_KdaDemo" type="Node2D"]
+script = ExtResource("1_kda_demo")

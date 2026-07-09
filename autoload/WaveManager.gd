@@ -13,6 +13,11 @@ signal wave_started(wave_idx: int, total_waves: int, enemy_count: int)
 signal wave_cleared(wave_idx: int, kills_in_wave: int, total_kills: int)
 signal all_waves_cleared(total_kills: int, total_seconds: float)
 
+# ---------- V0.3i 新增 KDA 信号（与 GameEvents 同签名，解耦WM自身事件总线；场景层 relay 到 GE 即可） ----------
+signal kda_stat_changed(stat_name: String, value: int)
+signal combo_changed(current: int, max_now: int)
+signal block_succeeded(absorbed: int)
+
 enum WaveState {
 	IDLE = 0,      # 还没 start_from_first
 	SPAWNING = 1,  # 波开始前 gap
@@ -40,6 +45,17 @@ var state: int = WaveState.IDLE
 var _gap_timer_left: float = 0.0
 var _time_started: float = 0.0
 
+# ---------- V0.3i 新增 KDA 字段（全默认 0 / 0.0，OneTrack 不影响V0.3h） ----------
+## KDA 三要素 + 辅助 4 项
+var stat_player_hits: int = 0
+var stat_player_deaths: int = 0
+var stat_blocks: int = 0
+var stat_max_combo: int = 0
+var stat_combo_now: int = 0
+var stat_damage_dealt: int = 0
+var _combo_timer_left: float = 0.0
+const COMBO_TIMEOUT_SEC: float = 2.5
+
 func _process(delta: float) -> void:
 	if state == WaveState.SPAWNING:
 		_gap_timer_left -= delta
@@ -47,6 +63,11 @@ func _process(delta: float) -> void:
 			_start_active()
 	if state == WaveState.ACTIVE:
 		total_elapsed = Time.get_ticks_msec() / 1000.0 - _time_started
+		# ---- V0.3i combo 超时倒计时（超 2.5s 归零） ----
+		if stat_combo_now > 0:
+			_combo_timer_left -= delta
+			if _combo_timer_left <= 0.0:
+				_reset_combo_only_now()
 
 func total_waves() -> int:
 	return max(0, waves_cfg.size())
@@ -93,6 +114,8 @@ func notify_enemy_killed() -> void:
 	total_kills += 1
 	kills_this_wave += 1
 	enemies_left_this_wave = max(0, enemies_left_this_wave - 1)
+	# V0.3i 追加：同步 KDA kills 字段与信号
+	_emit_kda_changed("kills", total_kills)
 	if enemies_left_this_wave <= 0:
 		_on_wave_cleared()
 
@@ -113,6 +136,14 @@ func _reset_all() -> void:
 	state = WaveState.IDLE
 	_gap_timer_left = 0.0
 	_time_started = 0.0
+	# V0.3i 追加：KDA 清零
+	stat_player_hits = 0
+	stat_player_deaths = 0
+	stat_blocks = 0
+	stat_max_combo = 0
+	stat_combo_now = 0
+	stat_damage_dealt = 0
+	_combo_timer_left = 0.0
 
 func _start_active() -> void:
 	var idx: int = current_wave_idx
@@ -153,3 +184,94 @@ func _gap_sec_for(idx: int) -> float:
 		return 1.5
 	var d: Dictionary = waves_cfg[idx]
 	return float(d.get("gap_sec", 1.8))
+
+# ============================================================
+# V0.3i KDA API（全新增，OneTrack 不影响 V0.3h 任何调用）
+# ============================================================
+
+## V0.3i: 玩家受击 → D 的 hit 计数
+func notify_player_hit() -> void:
+	stat_player_hits += 1
+	_emit_kda_changed("player_hits", stat_player_hits)
+
+## V0.3i: 玩家死亡 → D 的 death 计数（同时重置 combo）
+func notify_player_death() -> void:
+	stat_player_deaths += 1
+	_reset_combo_both()
+	_emit_kda_changed("deaths", stat_player_deaths)
+
+## V0.3i: 玩家成功格挡（吸收 absorbed 点伤害）→ A 的 block 计数
+func notify_block_success(absorbed: int = 0) -> void:
+	stat_blocks += 1
+	_emit_kda_changed("blocks", stat_blocks)
+	if has_signal("block_succeeded"):
+		emit_signal("block_succeeded", absorbed)
+
+## V0.3i: 对敌造成伤害（每刀一次）→ combo +1 + 总伤害 + 刷新 max
+func notify_dealt_damage(amount: int, is_kill: bool = false) -> void:
+	if amount > 0:
+		stat_damage_dealt += amount
+		_emit_kda_changed("damage_dealt", stat_damage_dealt)
+	stat_combo_now += 1
+	_combo_timer_left = COMBO_TIMEOUT_SEC
+	if stat_combo_now > stat_max_combo:
+		stat_max_combo = stat_combo_now
+		_emit_kda_changed("max_combo", stat_max_combo)
+	if has_signal("combo_changed"):
+		emit_signal("combo_changed", stat_combo_now, stat_max_combo)
+
+## V0.3i: 总伤害输出（Headless 用）
+func final_damage_dealt() -> int:
+	return stat_damage_dealt
+
+## V0.3i: 综合评分 S/A/B/C/D（详细公式见设计文档§四 / 用户手册§四）
+## Score = (Kills*3) + (Blocks*2) + (MaxCombo*1.5) + (Deaths*-6) + (<60s ? +10 : 0)
+func compute_rating() -> String:
+	var k: float = float(max(0, total_kills))
+	var b: float = float(max(0, stat_blocks))
+	var mc: float = float(max(0, stat_max_combo))
+	var d: float = float(max(0, stat_player_deaths))
+	var sec: float = max(0.0, total_elapsed)
+	var sc: float = k * 3.0 + b * 2.0 + mc * 1.5 + d * (-6.0)
+	if sec < 60.0:
+		sc += 10.0
+	if sc >= 40.0 and int(d) == 0:
+		return "S"
+	if sc >= 28.0:
+		return "A"
+	if sc >= 18.0:
+		return "B"
+	if sc >= 10.0:
+		return "C"
+	return "D"
+
+## V0.3i: 数值版 compute_rating（测试 UC07/08 直接用）
+func compute_score_raw() -> float:
+	var k: float = float(max(0, total_kills))
+	var b: float = float(max(0, stat_blocks))
+	var mc: float = float(max(0, stat_max_combo))
+	var d: float = float(max(0, stat_player_deaths))
+	var sec: float = max(0.0, total_elapsed)
+	var sc: float = k * 3.0 + b * 2.0 + mc * 1.5 + d * (-6.0)
+	if sec < 60.0:
+		sc += 10.0
+	return sc
+
+# ---------- internal helpers（V0.3i） ----------
+func _reset_combo_only_now() -> void:
+	if stat_combo_now == 0:
+		return
+	stat_combo_now = 0
+	if has_signal("combo_changed"):
+		emit_signal("combo_changed", stat_combo_now, stat_max_combo)
+
+func _reset_combo_both() -> void:
+	stat_combo_now = 0
+	stat_max_combo = max(0, stat_max_combo)  # 不清 max（死亡 Max 继续保留给结算）
+	_combo_timer_left = 0.0
+	if has_signal("combo_changed"):
+		emit_signal("combo_changed", stat_combo_now, stat_max_combo)
+
+func _emit_kda_changed(name: String, v: int) -> void:
+	if has_signal("kda_stat_changed"):
+		emit_signal("kda_stat_changed", name, v)

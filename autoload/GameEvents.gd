@@ -24,3 +24,8 @@ signal party_switched(old_idx: int, new_idx: int, new_char: Node)
 signal wave_started(wave_idx: int, total_waves: int, enemy_count: int)
 signal wave_cleared(wave_idx: int, kills_in_wave: int, total_kills: int)
 signal all_waves_cleared(total_kills: int, total_seconds: float)
+
+# ---------- V0.3i KDA结算信号（3个，追加，历史信号未改，OneTrack OK） ----------
+signal kda_stat_changed(stat_name: String, value: int)
+signal combo_changed(current: int, max_now: int)
+signal block_succeeded(absorbed: int)

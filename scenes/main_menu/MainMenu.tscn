@@ -164,6 +164,15 @@ theme_override_colors/font_color = Color(0.88, 0.55, 1.0, 1)
 theme_override_colors/font_outline_color = Color(0.14, 0.02, 0.22, 1)
 theme_override_constants/outline_size = 4
 
+[node name="BtnKdaDemo" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(560, 60)
+text = "🏅 V0.3i KDA结算+连击HUD K/D/B实时+Combo5绿10金20紫+SABCD评级卡"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.45, 1.0, 0.80, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.22, 0.14, 1)
+theme_override_constants/outline_size = 4
+
 [node name="BtnQuit" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(400, 60)
