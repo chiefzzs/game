@@ -117,25 +117,25 @@ func _setup_floor() -> void:
 	var st := StaticBody2D.new()
 	var cs := CollisionShape2D.new()
 	var rs := RectangleShape2D.new()
-	rs.size = Vector2(4000, 120)
+	rs.size = Vector2(1920, 120)
 	cs.shape = rs
-	cs.position = Vector2(0, 420)
+	cs.position = Vector2(960, 420)
 	st.add_child(cs)
 	floor_root.add_child(st)
 	var floor_bg := ColorRect.new()
-	floor_bg.position = Vector2(-2000, 360)
-	floor_bg.size = Vector2(4000, 120)
+	floor_bg.position = Vector2(0, 360)
+	floor_bg.size = Vector2(1920, 120)
 	floor_bg.color = Color(0.2, 0.32, 0.22)
 	floor_root.add_child(floor_bg)
-	for i in range(16):
+	for i in range(8):
 		var grass := ColorRect.new()
-		grass.position = Vector2(-2000 + float(i) * 250, 356)
+		grass.position = Vector2(float(i) * 240.0, 356)
 		grass.size = Vector2(140, 8)
 		grass.color = Color(0.3, 0.55, 0.3)
 		floor_root.add_child(grass)
 
 func _spawn_all() -> void:
-	var xs := [300.0, 480.0, 660.0]
+	var xs := [800.0, 960.0, 1120.0]
 	var scripts: Array = [_FARMER_SCRIPT, _MACE_SCRIPT, _SPEAR_SCRIPT]
 	for i in range(3):
 		var c: CharacterBody2D = CharacterBody2D.new()

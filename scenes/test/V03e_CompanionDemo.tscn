@@ -60,7 +60,7 @@ text = "🏠 Esc/鼠标中键=回主菜单"
 [node name="WorldRoot" type="Node2D" parent="Vb"]
 
 [node name="PlayerSpawn" type="Marker2D" parent="Vb/WorldRoot"]
-position = Vector2(900, 640)
+position = Vector2(960, 640)
 
 [node name="Dummy1Spawn" type="Marker2D" parent="Vb/WorldRoot"]
 position = Vector2(1600, 640)

@@ -57,30 +57,30 @@ func _setup_floor() -> void:
 	var st := StaticBody2D.new()
 	var cs := CollisionShape2D.new()
 	var rs := RectangleShape2D.new()
-	rs.size = Vector2(4000, 120)
+	rs.size = Vector2(1920, 120)
 	cs.shape = rs
-	cs.position = Vector2(0, 420)
+	cs.position = Vector2(960, 420)
 	st.add_child(cs)
 	floor_root.add_child(st)
 	var floor_bg := ColorRect.new()
-	floor_bg.position = Vector2(-2000, 360)
-	floor_bg.size = Vector2(4000, 120)
+	floor_bg.position = Vector2(0, 360)
+	floor_bg.size = Vector2(1920, 120)
 	floor_bg.color = Color(0.2, 0.32, 0.22)
 	floor_root.add_child(floor_bg)
-	for i in range(20):
+	for i in range(10):
 		var grass := ColorRect.new()
-		grass.position = Vector2(-2000 + float(i) * 200, 356)
+		grass.position = Vector2(float(i) * 192.0, 356)
 		grass.size = Vector2(110, 8)
 		grass.color = Color(0.3, 0.55, 0.3)
 		floor_root.add_child(grass)
 	for i in range(6):
 		var tree := ColorRect.new()
-		tree.position = Vector2(-900 + float(i) * 380, 180)
+		tree.position = Vector2(60.0 + float(i) * 310.0, 180)
 		tree.size = Vector2(70, 180)
 		tree.color = Color(0.22, 0.42, 0.22)
 		floor_root.add_child(tree)
 		var leaf := ColorRect.new()
-		leaf.position = Vector2(-920 + float(i) * 380, 140)
+		leaf.position = Vector2(40.0 + float(i) * 310.0, 140)
 		leaf.size = Vector2(110, 90)
 		leaf.color = Color(0.3, 0.65, 0.3)
 		floor_root.add_child(leaf)
@@ -182,7 +182,7 @@ func _setup_ui() -> void:
 func _spawn_player() -> void:
 	player = CharacterBody2D.new()
 	player.set_script(_FARMER_SCRIPT)
-	player.position = Vector2(300, 360)
+	player.position = Vector2(960, 360)
 	world_root.add_child(player)
 
 func _call_deferred_start_first() -> void:
