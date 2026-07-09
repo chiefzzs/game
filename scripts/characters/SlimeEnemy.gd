@@ -61,3 +61,6 @@ func _draw() -> void:
 			var ang: float = (-1.1 + float(i) * 0.26) * facing
 			arc.append(Vector2(cos(ang) * 54.0, sin(ang) * 54.0 + 6.0))
 		draw_polyline(arc, Color(0.48, 1.0, 0.52, 0.78), 4.0)
+
+	# V0.3h 追加（最后1行，不影响V0.3f原有绘制）：头顶HP条 + 红色闪
+	draw_hp_bar_and_flash_on_top()

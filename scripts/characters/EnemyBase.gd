@@ -21,6 +21,14 @@ var state_timer: float = 0.0
 var flash_time: float = 0.0
 var weapon_cfg: Dictionary = {}
 
+# ---------- V0.3h 新增（默认值兼容，OneTrack OK，不影响V0.3f） ----------
+var show_hp_bar_on_head: bool = true
+var hp_bar_width: float = 40.0
+var hp_bar_height: float = 5.0
+var hp_bar_y_offset: float = -48.0
+var hp_hit_flash_red: bool = true
+var flash_red_time_left: float = 0.0  # V0.3h：红色叠加闪（比白闪更醒目）
+
 const _ENEMY_LEGAL_TRANSITION: Dictionary = {
 	EnemyAIState.PATROL: [EnemyAIState.PATROL, EnemyAIState.CHASE, EnemyAIState.RETREAT],
 	EnemyAIState.CHASE:  [EnemyAIState.PATROL, EnemyAIState.CHASE, EnemyAIState.ATTACK, EnemyAIState.RETREAT],
@@ -78,6 +86,9 @@ func _physics_process(delta: float) -> void:
 		attack_cd_left = max(0.0, attack_cd_left - delta)
 	if flash_time > 0.0:
 		flash_time = max(0.0, flash_time - delta)
+		queue_redraw()
+	if flash_red_time_left > 0.0:
+		flash_red_time_left = max(0.0, flash_red_time_left - delta)
 		queue_redraw()
 	var in_tree: bool = (get_tree() != null and is_inside_tree())
 	if in_tree:
@@ -190,6 +201,8 @@ func tick_state(_delta: float) -> void:
 
 func take_damage(dmg: int, attacker: Node = null, opts: Dictionary = {}) -> int:
 	flash_time = 0.08
+	if hp_hit_flash_red:
+		flash_red_time_left += 0.12
 	var ret_int: int = super.take_damage(dmg, attacker, opts)
 	var in_tree: bool = (get_tree() != null and is_inside_tree())
 	if in_tree:
@@ -205,3 +218,36 @@ func take_damage(dmg: int, attacker: Node = null, opts: Dictionary = {}) -> int:
 				ge.emit_signal("damage_taken", self, float(ret_int), is_cr2, is_bs2)
 	queue_redraw()
 	return ret_int
+
+## V0.3h 工具：3段HP颜色选择（绿>60% / 黄>30% / 红<=30%）
+func hp_bar_color_3phase() -> Color:
+	var ratio: float = float(hp) / float(max(max_hp, 1))
+	if ratio > 0.6:
+		return Color(0.3, 0.85, 0.42)
+	elif ratio > 0.3:
+		return Color(0.95, 0.78, 0.25)
+	else:
+		return Color(0.95, 0.3, 0.35)
+
+## V0.3h 工具：在子类_draw()末尾可调用，画头顶HP条 + 闪红（V0.3h）
+func draw_hp_bar_and_flash_on_top() -> void:
+	# 1) 闪红（叠加flash_red_time_left，比V0.3f白色更醒目）
+	if flash_red_time_left > 0.0:
+		var col_r := Color(1.0, 0.22, 0.22, 0.55)
+		draw_rect(Rect2(-26, -30, 52, 64), col_r, true)
+	# 2) 头顶HP条（活着才显示）
+	if not show_hp_bar_on_head:
+		return
+	if state == FSMState.DEAD:
+		return
+	var w: float = hp_bar_width
+	var h: float = hp_bar_height
+	var y: float = hp_bar_y_offset
+	var ratio: float = clamp(float(hp) / float(max(max_hp, 1)), 0.0, 1.0)
+	var filled_w: float = w * ratio
+	# 灰底
+	draw_rect(Rect2(-w / 2.0 - 1, y - 1, w + 2, h + 2), Color(0.05, 0.06, 0.1, 0.85), true)
+	# 黑边
+	draw_rect(Rect2(-w / 2.0, y, w, h), Color(0.0, 0.0, 0.0, 0.95), false, 1.0)
+	# 彩色填充
+	draw_rect(Rect2(-w / 2.0, y, filled_w, h), hp_bar_color_3phase(), true)

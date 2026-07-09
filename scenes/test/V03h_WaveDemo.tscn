@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://v03hwavedemo11"]
+
+[ext_resource type="Script" path="res://scenes/test/V03h_WaveDemo.gd" id="1_script"]
+
+[node name="V03h_WaveDemo" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="WorldRootPH" type="Node2D" parent="."]
+
+[node name="HintLbl" type="Label" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 1180.0
+offset_bottom = 60.0
+text = ""
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+visible = false

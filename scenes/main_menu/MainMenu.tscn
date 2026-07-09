@@ -30,8 +30,8 @@ theme_override_constants/separation = 20
 
 [node name="TitleLbl" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "中世纪农民起义 V0.3g
-三角色编队切换（Tab循环/F1F2F3选角）（6迭代·第3个）
+text = "中世纪农民起义 V0.3h
+多波次通关战斗+顶血条+受击闪红（7迭代·第3个）
 ─────────────"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.96, 0.91, 0.79, 1)
@@ -153,6 +153,15 @@ text = "👥 V0.3g 三角色编队切换 Tab循环 / F1农民 F2锤兵 F3枪兵"
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1.0, 0.95, 0.4, 1)
 theme_override_colors/font_outline_color = Color(0.2, 0.14, 0.0, 1)
+theme_override_constants/outline_size = 4
+
+[node name="BtnWaveDemo" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(560, 60)
+text = "🏆 V0.3h 多波次通关战斗 3波(1/2/3史莱姆) 顶血条+闪红+胜利卡"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.88, 0.55, 1.0, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.02, 0.22, 1)
 theme_override_constants/outline_size = 4
 
 [node name="BtnQuit" type="Button" parent="VBoxContainer"]

@@ -19,3 +19,8 @@ signal shield_broken(who: Node, by_whom: Node)
 
 # ---------- V0.3g 3角色编队切换信号（新增，历史信号未改，OneTrack OK） ----------
 signal party_switched(old_idx: int, new_idx: int, new_char: Node)
+
+# ---------- V0.3h 多波次战斗信号（3个，新增，历史信号未改，OneTrack OK） ----------
+signal wave_started(wave_idx: int, total_waves: int, enemy_count: int)
+signal wave_cleared(wave_idx: int, kills_in_wave: int, total_kills: int)
+signal all_waves_cleared(total_kills: int, total_seconds: float)

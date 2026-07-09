@@ -30,6 +30,7 @@ Saves="*res://autoload/SaveSlotManager.gd"
 InputBus="*res://autoload/InputBus.gd"
 LevelFlow="*res://autoload/LevelFlowController.gd"
 PartyManager="*res://autoload/PartyManager.gd"
+WaveManager="*res://autoload/WaveManager.gd"
 
 [display]
 
