@@ -61,7 +61,7 @@ func _SpawnDummy() -> void:
 	d.atk = 0
 	d.no_die = false  # 允许死亡（演示 DEAD 自锁）
 	d.kind = d.CharacterKind.ENEMY
-	d.global_position = Vector2(560, 360)
+	d.global_position = Vector2(960, 360)
 	dummy_spawn.add_child(d)
 	if d.has_signal("hp_changed"):
 		d.hp_changed.connect(_OnHpChg)
@@ -72,7 +72,7 @@ func _SpawnDummy() -> void:
 	_dummy = d
 	_OnHpChg(0, d.hp, d.max_hp)
 	_OnStateChg(-1, d.state)
-	_AddBLine("[color=#06D6A0]✓ 真 CharacterBody2D 稻草人已生成 @ (560,360)（extends CharacterBase V0.3c）[/color]")
+	_AddBLine("[color=#06D6A0]✓ 真 CharacterBody2D 稻草人已生成 @ (960,360)（屏幕中央·extends CharacterBase V0.3c）[/color]")
 
 # 兜底：没有场景树挂 CharacterBody2D 时，纯内存 new CharacterBase（保证演示 100% 可运行）
 func _InitDummyFallback() -> void:

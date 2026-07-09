@@ -119,15 +119,15 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 300)
 
 [node name="Ground" type="StaticBody2D" parent="Vb/WorldRoot"]
-position = Vector2(0, 520)
+position = Vector2(960, 680)
 collision_layer = 4
 collision_mask = 0
 
 [node name="PlayerSpawn" type="Node2D" parent="Vb/WorldRoot"]
-position = Vector2(260, 460)
+position = Vector2(960, 620)
 
 [node name="DummySpawn" type="Node2D" parent="Vb/WorldRoot"]
-position = Vector2(780, 460)
+position = Vector2(1500, 620)
 
 [node name="HbTips" type="HBoxContainer" parent="Vb"]
 layout_mode = 2

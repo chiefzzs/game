@@ -62,11 +62,22 @@ func _SpawnGround() -> void:
 	if ground_static.get_child_count() == 0:
 		var cs := CollisionShape2D.new()
 		var rs := RectangleShape2D.new()
-		rs.size = Vector2(2000, 60)
+		rs.size = Vector2(1920, 60)
 		cs.shape = rs
-		cs.position = Vector2(0, 30)
+		cs.position = Vector2(960, 30)
 		ground_static.add_child(cs)
-		ground_static.position = Vector2(0, 520)
+		ground_static.position = Vector2(960, 680)
+	var vis := ColorRect.new()
+	vis.color = Color(0.22, 0.55, 0.28)
+	vis.size = Vector2(1920, 80)
+	vis.position = Vector2(0, 680)
+	ground_static.get_parent().add_child(vis)
+	for i in range(10):
+		var grass := ColorRect.new()
+		grass.position = Vector2(float(i) * 192.0, 676)
+		grass.size = Vector2(110, 8)
+		grass.color = Color(0.3, 0.55, 0.3)
+		ground_static.get_parent().add_child(grass)
 
 func _SpawnPlayer() -> void:
 	if player_spawn == null:
