@@ -14,6 +14,7 @@ extends Control
 @onready var btn_playerdemo: Button = $VBoxContainer/HSep2/BtnPlayerDemo
 @onready var btn_companiondemo: Button = $VBoxContainer/HSep2/BtnCompanionDemo
 @onready var btn_enemydemo: Button = $VBoxContainer/HSep2/BtnEnemyDemo
+@onready var btn_partydemo: Button = $VBoxContainer/BtnPartyDemo
 @onready var btn_quit: Button = $VBoxContainer/BtnQuit
 @onready var lbl_log: Label = $VBoxContainer/LblLog
 
@@ -56,8 +57,12 @@ func _ready() -> void:
 		AppendLog("⚔ V0.3f 敌人AI实战：史莱姆🟢巡逻→🟠追击→🔴攻击→🟣归位 + 3色伤害浮字(白/暴击黄/背刺红)")
 		AppendLog("   操作步骤：手册附录F.6步 — 走近敌人触发AI全4态 + J攻击敌人出伤害浮字")
 		get_tree().change_scene_to_file("res://scenes/test/V03f_EnemyDemo.tscn"))
+	btn_partydemo.pressed.connect(func():
+		AppendLog("👥 V0.3g 三角色编队切换：Tab循环切换 / F1农民 F2锤兵 F3枪兵 / 脚底黄光+顶部HP卡金光")
+		AppendLog("   操作步骤：手册附录G.5步 — Tab3次循环一圈+F1/F2/F3直选+切换后只有当前角色移动/攻击")
+		get_tree().change_scene_to_file("res://scenes/test/V03g_PartyDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
-	AppendLog("> 进入主菜单（V0.3f），测试区 9 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c) + 绿(V0.3d玩家) + 紫(V0.3e樵夫) + 橙(V0.3f敌人AI)~")
+	AppendLog("> 进入主菜单（V0.3g），测试区 10 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c) + 绿(V0.3d玩家) + 紫(V0.3e樵夫) + 橙(V0.3f敌人AI) + 金(V0.3g编队)~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")
 	InputBus.PausePressed.connect(func(): AppendLog("⏸ InputBus.PausePressed 信号触发（Esc/Start）"))
 

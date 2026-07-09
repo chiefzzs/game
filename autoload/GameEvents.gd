@@ -16,3 +16,6 @@ signal enemy_hp_changed(enemy_id: String, who: Node, now_hp: int, max_hp: int)
 signal enemy_died(who: Node, id_key: String, pos: Vector2)
 signal item_picked(item_id: String, amount: int, pos: Vector2)
 signal shield_broken(who: Node, by_whom: Node)
+
+# ---------- V0.3g 3角色编队切换信号（新增，历史信号未改，OneTrack OK） ----------
+signal party_switched(old_idx: int, new_idx: int, new_char: Node)

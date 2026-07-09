@@ -17,6 +17,7 @@ var gold: int = 0
 var combo_index: int = 0
 var combo_window_left: float = 0.0
 var state_timer: float = 0.0
+var is_active_controllable: bool = true  # V0.3g: 编队切换时非active角色冻结input，默认true=OneTrack旧行为
 
 func _ready() -> void:
 	kind = _CE.CharacterKind.PLAYER
@@ -49,7 +50,7 @@ func _physics_process(delta: float) -> void:
 	regenerate_stamina(delta, state == FSMState.BLOCK)
 	if state != FSMState.DASH and state != FSMState.HURT \
 	   and state != FSMState.ATTACK1 and state != FSMState.ATTACK2 and state != FSMState.ATTACK3:
-		var h: float = InputBus.moveAxis
+		var h: float = InputBus.moveAxis if is_active_controllable else 0.0
 		if is_on_floor():
 			velocity.x = move_toward(velocity.x, h * move_speed, 2000.0 * delta)
 			if abs(h) > 0.01:
@@ -111,6 +112,8 @@ func _on_axis(_h: float, _v: float) -> void:
 	pass
 
 func _on_jump_pressed() -> void:
+	if not is_active_controllable:
+		return
 	var cfg_mgr: Node = _autoload("ConfigManager")
 	var jump_buf: float = 0.12
 	if cfg_mgr and cfg_mgr.has_method("cfg_get"):
@@ -146,6 +149,8 @@ func _on_jump_rel() -> void:
 		velocity.y = -220.0
 
 func _on_dash() -> void:
+	if not is_active_controllable:
+		return
 	if dash_cd_left > 0.0:
 		return
 	if state == FSMState.DEAD or state == FSMState.HURT:
@@ -174,6 +179,8 @@ func _on_dash() -> void:
 	change_state(FSMState.DASH)
 
 func _on_attack() -> void:
+	if not is_active_controllable:
+		return
 	if state == FSMState.DEAD or state == FSMState.HURT or state == FSMState.BLOCK or state == FSMState.DASH:
 		return
 	if attack_chain_cfg.is_empty():
@@ -199,6 +206,8 @@ func _on_attack() -> void:
 		ge.emit_signal("combo_changed", self, combo_index, attack_chain_cfg.size(), combo_window_left)
 
 func _on_block_pressed() -> void:
+	if not is_active_controllable:
+		return
 	if state == FSMState.DEAD or state == FSMState.HURT or state == FSMState.DASH:
 		return
 	if state == FSMState.ATTACK1 or state == FSMState.ATTACK2 or state == FSMState.ATTACK3:
@@ -206,10 +215,14 @@ func _on_block_pressed() -> void:
 	change_state(FSMState.BLOCK)
 
 func _on_block_released() -> void:
+	if not is_active_controllable:
+		return
 	if state == FSMState.BLOCK:
 		change_state(FSMState.IDLE)
 
 func _on_weapon(slot: int) -> void:
+	if not is_active_controllable:
+		return
 	var key := "fist"
 	match slot:
 		1: key = "fist"
