@@ -12,6 +12,7 @@ extends Control
 @onready var btn_tdamage: Button = $VBoxContainer/HSep2/BtnTDamage
 @onready var btn_fsmdemo: Button = $VBoxContainer/HSep2/BtnFsmDemo
 @onready var btn_playerdemo: Button = $VBoxContainer/HSep2/BtnPlayerDemo
+@onready var btn_companiondemo: Button = $VBoxContainer/HSep2/BtnCompanionDemo
 @onready var btn_quit: Button = $VBoxContainer/BtnQuit
 @onready var lbl_log: Label = $VBoxContainer/LblLog
 
@@ -46,8 +47,12 @@ func _ready() -> void:
 		AppendLog("⚙ V0.3d 玩家可操作演示：键盘A/D跑·Space双跳·J3连击·K举盾·Shift冲刺·1/2/3切武器")
 		AppendLog("   操作步骤：手册附录C — 6步看出全部10状态+HP/体力条+武器切换真实变化")
 		get_tree().change_scene_to_file("res://scenes/test/V03d_PlayerDemo.tscn"))
+	btn_companiondemo.pressed.connect(func():
+		AppendLog("🛡 V0.3e 樵夫同伴同行：农夫玩家A/D跑 → 樵夫伯克跟随+AI自动挥斧攻击稻草人")
+		AppendLog("   操作步骤：手册附录D.6步 — AI色卡青(IDLE)/蓝(FOLLOW)/红(ASSIST)/紫(RETREAT)+HP条实时变化")
+		get_tree().change_scene_to_file("res://scenes/test/V03e_CompanionDemo.tscn"))
 	btn_quit.pressed.connect(func(): get_tree().quit())
-	AppendLog("> 进入主菜单（V0.3d），测试区 7 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c) + 绿(V0.3d玩家演示)~")
+	AppendLog("> 进入主菜单（V0.3e），测试区 8 按钮：蓝×4 + 金(V0.3b) + 橙(V0.3c) + 绿(V0.3d玩家) + 紫(V0.3e樵夫同伴)~")
 	AppendLog("> 提示：Esc / 手柄 Start 暂停；F1~F4 切4个测试场景")
 	InputBus.PausePressed.connect(func(): AppendLog("⏸ InputBus.PausePressed 信号触发（Esc/Start）"))
 

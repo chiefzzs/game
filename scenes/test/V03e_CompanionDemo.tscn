@@ -1,0 +1,71 @@
+[gd_scene load_steps=2 format=3 uid="uid://v03ecompdemo01"]
+
+[ext_resource type="Script" path="res://scenes/test/V03e_CompanionDemo.gd" id="1_script"]
+
+[node name="V03e_CompanionDemo" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Vb" type="VBoxContainer" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="PanelContainer" parent="Vb"]
+custom_minimum_size = Vector2(1920, 82)
+
+[node name="HbAi" type="HBoxContainer" parent="Vb/TopBar"]
+theme_override_constants/separation = 10
+
+[node name="LblAi" type="Label" parent="Vb/TopBar/HbAi"]
+custom_minimum_size = Vector2(1120, 30)
+text = "🛡 V0.3e 樵夫同伴同行"
+
+[node name="LblAiState" type="Label" parent="Vb/TopBar/HbAi"]
+custom_minimum_size = Vector2(680, 30)
+text = "AI: IDLE_NEAR"
+
+[node name="AiColor" type="ColorRect" parent="Vb/TopBar/HbAi"]
+custom_minimum_size = Vector2(30, 30)
+color = Color(0.3, 0.9, 0.6, 1)
+
+[node name="HbHp" type="HBoxContainer" parent="Vb/TopBar"]
+theme_override_constants/separation = 12
+
+[node name="BarPlayer" type="ProgressBar" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(300, 26)
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="LblPlayerHp" type="Label" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(260, 26)
+text = "农夫 HP: 100/100"
+
+[node name="BarCompanion" type="ProgressBar" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(300, 26)
+max_value = 120.0
+value = 120.0
+show_percentage = false
+
+[node name="LblCompanionHp" type="Label" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(320, 26)
+text = "樵夫伯克 HP: 120/120"
+
+[node name="LblHintEsc" type="Label" parent="Vb/TopBar/HbHp"]
+custom_minimum_size = Vector2(260, 26)
+text = "🏠 Esc/鼠标中键=回主菜单"
+
+[node name="WorldRoot" type="Node2D" parent="Vb"]
+
+[node name="PlayerSpawn" type="Marker2D" parent="Vb/WorldRoot"]
+position = Vector2(900, 640)
+
+[node name="Dummy1Spawn" type="Marker2D" parent="Vb/WorldRoot"]
+position = Vector2(1600, 640)
+
+[node name="Dummy2Spawn" type="Marker2D" parent="Vb/WorldRoot"]
+position = Vector2(1800, 640)
+
+[node name="Floor" type="Node2D" parent="Vb/WorldRoot"]

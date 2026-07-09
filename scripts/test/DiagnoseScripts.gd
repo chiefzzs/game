@@ -20,11 +20,14 @@ func _ready() -> void:
 		"res://scripts/test/V03b_DamageTest.gd",
 		"res://scripts/test/V03c_FsmTest.gd",
 		"res://scripts/test/V03d_PlayerTest.gd",
+		"res://scripts/test/V03e_CompanionTest.gd",
 		"res://scripts/test/runner_v03c.gd",
 		"res://scripts/test/runner_v03d.gd",
+		"res://scripts/test/runner_v03e.gd",
 		"res://scenes/test/V03b_DamageDemo.gd",
 		"res://scenes/test/V03c_FsmDemo.gd",
 		"res://scenes/test/V03d_PlayerDemo.gd",
+		"res://scenes/test/V03e_CompanionDemo.gd",
 		"res://scenes/main_menu/MainMenu.gd",
 	]
 	print("[Diagnose] Reloading ", paths.size(), " scripts:")
