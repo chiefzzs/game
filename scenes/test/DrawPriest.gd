@@ -104,14 +104,14 @@ func _draw() -> void:
 		robe_dark = Color(0.85, 0.6, 0.6, 1.0)
 		gold_c = Color(1.0, 0.92, 0.45, 1.0)
 		skin_c = Color(1.0, 0.78, 0.7, 1.0)
-	var robe_back: PoolVector2Array = PoolVector2Array([
+	var robe_back: PackedVector2Array = PackedVector2Array([
 		Vector2(-12, -10),
 		Vector2(12, -10),
 		Vector2(14, 22 + bob),
 		Vector2(-14, 22 + bob)
 	])
 	draw_colored_polygon(robe_back, robe_dark)
-	var robe_front: PoolVector2Array = PoolVector2Array([
+	var robe_front: PackedVector2Array = PackedVector2Array([
 		Vector2(-10, -8),
 		Vector2(10, -8),
 		Vector2(12, 20 + bob),
@@ -121,42 +121,42 @@ func _draw() -> void:
 	var sash_rect: Rect2 = Rect2(-13, 2 + bob, 26, 5)
 	draw_rect(sash_rect, COLOR_SASH_DARK, true)
 	draw_rect(Rect2(-12, 3 + bob, 24, 3), COLOR_SASH, true)
-	var gold_trim_bot: PoolVector2Array = PoolVector2Array([
+	var gold_trim_bot: PackedVector2Array = PackedVector2Array([
 		Vector2(-14, 18 + bob),
 		Vector2(14, 18 + bob),
 		Vector2(13, 22 + bob),
 		Vector2(-13, 22 + bob)
 	])
 	draw_colored_polygon(gold_trim_bot, Color(gold_c.r, gold_c.g, gold_c.b, 0.85))
-	var gold_trim_collar: PoolVector2Array = PoolVector2Array([
+	var gold_trim_collar: PackedVector2Array = PackedVector2Array([
 		Vector2(-10, -10),
 		Vector2(10, -10),
 		Vector2(8, -6),
 		Vector2(-8, -6)
 	])
 	draw_colored_polygon(gold_trim_collar, gold_c)
-	var arm_r: PoolVector2Array = PoolVector2Array([
+	var arm_r: PackedVector2Array = PackedVector2Array([
 		Vector2(8, -6),
 		Vector2(13, -3),
 		Vector2(14, 8 + bob),
 		Vector2(9, 10 + bob)
 	])
 	draw_colored_polygon(arm_r, robe_dark)
-	var arm_l: PoolVector2Array = PoolVector2Array([
+	var arm_l: PackedVector2Array = PackedVector2Array([
 		Vector2(-8, -6),
 		Vector2(-13, -3),
 		Vector2(-14, 8 + bob),
 		Vector2(-9, 10 + bob)
 	])
 	draw_colored_polygon(arm_l, robe_dark)
-	var arm2_r: PoolVector2Array = PoolVector2Array([
+	var arm2_r: PackedVector2Array = PackedVector2Array([
 		Vector2(8, -5),
 		Vector2(12, -2),
 		Vector2(13, 7 + bob),
 		Vector2(9, 9 + bob)
 	])
 	draw_colored_polygon(arm2_r, robe_color)
-	var arm2_l: PoolVector2Array = PoolVector2Array([
+	var arm2_l: PackedVector2Array = PackedVector2Array([
 		Vector2(-8, -5),
 		Vector2(-12, -2),
 		Vector2(-13, 7 + bob),
@@ -172,7 +172,7 @@ func _draw() -> void:
 	draw_circle(Vector2(staff_x, staff_top), 6.8, gold_c)
 	var glow_t: float = 0.5 + 0.5 * sin(_t * 4.0)
 	draw_circle(Vector2(staff_x, staff_top), 4.2, Color(COLOR_GOLD_SHINE.r, COLOR_GOLD_SHINE.g, COLOR_GOLD_SHINE.b, 0.8 + glow_t * 0.2))
-	var star_pts: PoolVector2Array = PoolVector2Array()
+	var star_pts: PackedVector2Array = PackedVector2Array()
 	for i in range(8):
 		var ang: float = (float(i) / 8.0) * TAU - PI * 0.5
 		var rr: float = 3.0 if i % 2 == 0 else 1.3
@@ -189,7 +189,7 @@ func _draw() -> void:
 	var head_rect := Rect2(-9, -24, 18, 16)
 	draw_rect(Rect2(head_rect.position + Vector2(0.4, 4.0), Vector2(head_rect.size.x - 0.8, head_rect.size.y - 4.0)), COLOR_SKIN_DARK, true)
 	draw_rect(Rect2(head_rect.position + Vector2(1.0, 4.4), Vector2(head_rect.size.x - 2.0, head_rect.size.y - 5.0)), skin_c, true)
-	var beard_pts: PoolVector2Array = PoolVector2Array([
+	var beard_pts: PackedVector2Array = PackedVector2Array([
 		Vector2(-8, -10),
 		Vector2(8, -10),
 		Vector2(6, -2),
@@ -197,7 +197,7 @@ func _draw() -> void:
 		Vector2(-6, -2)
 	])
 	draw_colored_polygon(beard_pts, Color(0.92, 0.9, 0.85, 1.0))
-	var beard2: PoolVector2Array = PoolVector2Array([
+	var beard2: PackedVector2Array = PackedVector2Array([
 		Vector2(-6, -9),
 		Vector2(6, -9),
 		Vector2(5, -3),
@@ -205,35 +205,35 @@ func _draw() -> void:
 		Vector2(-5, -3)
 	])
 	draw_colored_polygon(beard2, Color(1.0, 0.98, 0.94, 1.0))
-	var hat_base: PoolVector2Array = PoolVector2Array([
+	var hat_base: PackedVector2Array = PackedVector2Array([
 		Vector2(-11, -14),
 		Vector2(11, -14),
 		Vector2(9, -10),
 		Vector2(-9, -10)
 	])
 	draw_colored_polygon(hat_base, COLOR_HAT_DARK)
-	var hat_base2: PoolVector2Array = PoolVector2Array([
+	var hat_base2: PackedVector2Array = PackedVector2Array([
 		Vector2(-10, -13.5),
 		Vector2(10, -13.5),
 		Vector2(8.5, -10.5),
 		Vector2(-8.5, -10.5)
 	])
 	draw_colored_polygon(hat_base2, COLOR_HAT)
-	var hat_cone: PoolVector2Array = PoolVector2Array([
+	var hat_cone: PackedVector2Array = PackedVector2Array([
 		Vector2(-8, -14),
 		Vector2(8, -14),
 		Vector2(3, -30),
 		Vector2(-3, -30)
 	])
 	draw_colored_polygon(hat_cone, COLOR_HAT_DARK)
-	var hat_cone2: PoolVector2Array = PoolVector2Array([
+	var hat_cone2: PackedVector2Array = PackedVector2Array([
 		Vector2(-7, -14.5),
 		Vector2(7, -14.5),
 		Vector2(2.5, -29.5),
 		Vector2(-2.5, -29.5)
 	])
 	draw_colored_polygon(hat_cone2, COLOR_HAT)
-	var hat_gold_band: PoolVector2Array = PoolVector2Array([
+	var hat_gold_band: PackedVector2Array = PackedVector2Array([
 		Vector2(-9, -16),
 		Vector2(9, -16),
 		Vector2(8, -13),

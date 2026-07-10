@@ -250,7 +250,7 @@ func _do_heal_burst() -> void:
 		if _drawer and _drawer.has_method("trigger_heal_flash"):
 			_drawer.call("trigger_heal_flash", healed_count)
 
-func take_damage(dmg: int, attacker_pos: Vector2 = Vector2.ZERO, is_crit: bool = false) -> void:
+func take_damage(dmg: int, attacker_pos: Vector2 = Vector2.ZERO, is_crit: bool = false, _unused_tag: String = "") -> void:
 	if hp <= 0 or not _initialized:
 		return
 	hp = max(0, hp - dmg)

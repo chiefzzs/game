@@ -187,7 +187,7 @@ func _refind_nearest_enemy(force: bool = false) -> void:
 			best = n
 	_enemy_node = best
 
-func take_damage(dmg: int, attacker_pos: Vector2 = Vector2.ZERO, is_crit: bool = false) -> void:
+func take_damage(dmg: int, attacker_pos: Vector2 = Vector2.ZERO, is_crit: bool = false, _unused_tag: String = "") -> void:
 	if hp <= 0 or not _initialized:
 		return
 	hp = max(0, hp - dmg)
