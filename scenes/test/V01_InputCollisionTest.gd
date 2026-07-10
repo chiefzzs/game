@@ -145,6 +145,47 @@ func _ready() -> void:
 		weapon_holder.visible = true
 	hud("🏘️ 村庄式无限环境已加载！向右走→动态生成房屋/谷仓/水井/篱笆/农田/村庄远景")
 	hud("🗡️ 初始武器：木剑！伤害5-8 / 攻速0.18s / 体力-2   按1切换耙子 / 按2切回木剑（所有武器挥击体力统一-2）")
+	var _ally_world: Node = $World
+	if _ally_world:
+		var _ax: float = player.global_position.x
+		var _ay: float = player.global_position.y
+		var _wc: CharacterBody2D = CharacterBody2D.new()
+		_wc.name = "WoodcutterAlly"
+		_wc.set_script(load("res://scenes/test/Woodcutter.gd"))
+		_wc.collision_layer = 8
+		_wc.collision_mask = 4
+		var _wcs: CollisionShape2D = CollisionShape2D.new()
+		var _wrs: RectangleShape2D = RectangleShape2D.new()
+		_wrs.size = Vector2(28, 48)
+		_wcs.shape = _wrs
+		_wc.add_child(_wcs)
+		var _wdraw: Node2D = Node2D.new()
+		_wdraw.name = "Drawer"
+		_wdraw.set_script(load("res://scenes/test/DrawWoodcutter.gd"))
+		_wc.add_child(_wdraw)
+		_wc.global_position = Vector2(_ax - 90.0, _ay)
+		if _wc.has_signal("died"):
+			_wc.died.connect(func (): _on_ally_died(_wc))
+		_ally_world.add_child(_wc)
+		var _hc: CharacterBody2D = CharacterBody2D.new()
+		_hc.name = "HunterAlly"
+		_hc.set_script(load("res://scenes/test/HunterNPC.gd"))
+		_hc.collision_layer = 8
+		_hc.collision_mask = 4
+		var _hcs: CollisionShape2D = CollisionShape2D.new()
+		var _hrs: RectangleShape2D = RectangleShape2D.new()
+		_hrs.size = Vector2(28, 48)
+		_hcs.shape = _hrs
+		_hc.add_child(_hcs)
+		var _hdraw: Node2D = Node2D.new()
+		_hdraw.name = "Drawer"
+		_hdraw.set_script(load("res://scenes/test/DrawHunter.gd"))
+		_hc.add_child(_hdraw)
+		_hc.global_position = Vector2(_ax + 90.0, _ay)
+		if _hc.has_signal("died"):
+			_hc.died.connect(func (): _on_ally_died(_hc))
+		_ally_world.add_child(_hc)
+		hud("🤝 队友已加入！🪓樵夫(近战绿光环) 在左  🏹猎人(远程蓝光环) 在右 —— 猎人15米内全敌人射击")
 	_flush()
 
 func hud(msg: String) -> void:
