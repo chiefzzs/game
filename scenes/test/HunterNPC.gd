@@ -1,8 +1,8 @@
 extends CharacterBody2D
 class_name HunterNPC
-## 猎人 NPC（玩家盟友）：高攻速高伤害低血量的远程弓箭友军
-##  - 数值：HP65 攻击18-24，攻速0.45s，暴击18%
-##  - 行为：跟随玩家，15米=1500像素内所有敌人都射箭（每次选最近目标，逐个覆盖全部）
+## 猎人 NPC（玩家盟友）：中速攻击高伤害低血量的远程弓箭友军
+##  - 数值：HP65 攻击18-24，攻速0.9s，暴击18%
+##  - 行为：**强制紧跟玩家不超过5格(≈160px)**，超出立刻全速跟上；15米内所有敌人都射箭
 ##  - 视觉：DrawHunter 墨绿色游猎斗篷+猎帽+手持弓箭+蓝色盟友光环
 
 signal died()
@@ -20,14 +20,15 @@ const PATROL_RANGE: float = 80.0
 const ATTACK_RADIUS: float = 1500.0
 const MIN_SHOOT_DIST: float = 180.0
 const KITE_DIST: float = 220.0
-const ATTACK_CD: float = 0.45
-const DRAW_BOW_DUR: float = 0.22
+const ATTACK_CD: float = 0.9
+const DRAW_BOW_DUR: float = 0.32
 const GROUP_ALLY := "allies_v02"
 const GROUP_ENEMY := "enemies_v02"
 const GROUP_PLAYER_CANDIDATE := "player"
 const PATH_ARROW_FALLBACK := "res://scenes/test/Arrow.tscn"
-const FOLLOW_ACTIVATE_DIST: float = 320.0
-const FOLLOW_DEACTIVATE_DIST: float = 180.0
+const FOLLOW_ACTIVATE_DIST: float = 170.0
+const FOLLOW_DEACTIVATE_DIST: float = 130.0
+const MAX_ALLOWED_DIST_FROM_PLAYER: float = 170.0
 
 var hp: int = MAX_HP
 var max_hp: int = MAX_HP
@@ -235,20 +236,24 @@ func _physics_process(delta: float) -> void:
 	if has_target:
 		target_pos = _current_target.global_position
 		dist_target = global_position.distance_to(target_pos)
-	elif player_alive:
-		target_pos = _player_node.global_position
-		dist_player = global_position.distance_to(target_pos)
-	var in_shoot_range: bool = has_target and (dist_target <= ATTACK_RADIUS) and (dist_target >= MIN_SHOOT_DIST)
-	var kite_needed: bool = has_target and dist_target < KITE_DIST
+	if player_alive:
+		dist_player = global_position.distance_to(_player_node.global_position)
+	var force_follow_player: bool = player_alive and (dist_player > MAX_ALLOWED_DIST_FROM_PLAYER)
+	var follow_target_pos: Vector2 = _player_node.global_position if player_alive else global_position
+	var in_shoot_range: bool = (not force_follow_player) and has_target and (dist_target <= ATTACK_RADIUS) and (dist_target >= MIN_SHOOT_DIST)
+	var kite_needed: bool = (not force_follow_player) and has_target and dist_target < KITE_DIST
 	var should_follow: bool = false
 	if player_alive:
 		if _state == "follow":
 			should_follow = dist_player > FOLLOW_DEACTIVATE_DIST
 		else:
 			should_follow = dist_player > FOLLOW_ACTIVATE_DIST
-	should_follow = (not has_target) and should_follow
+	should_follow = force_follow_player or ((not has_target) and should_follow)
 	var prev_state: String = _state
-	if kite_needed and not in_shoot_range:
+	if force_follow_player:
+		_state = "follow"
+		target_pos = follow_target_pos
+	elif kite_needed and not in_shoot_range:
 		_state = "kite"
 	elif in_shoot_range:
 		_state = "attack"
@@ -256,6 +261,7 @@ func _physics_process(delta: float) -> void:
 		_state = "approach"
 	elif should_follow:
 		_state = "follow"
+		target_pos = follow_target_pos
 	else:
 		_state = "patrol"
 	var move_x: float = 0.0
@@ -284,7 +290,8 @@ func _physics_process(delta: float) -> void:
 			_is_drawing = false
 			_draw_bow_t = 0.0
 			var fd: float = 1.0 if (target_pos.x - global_position.x) >= 0.0 else -1.0
-			move_x = fd * (CHASE_SPD * 0.8)
+			var spd_factor: float = 1.0 if force_follow_player else 0.85
+			move_x = fd * (CHASE_SPD * spd_factor)
 			_face_dir = fd
 		_:
 			_is_drawing = false
