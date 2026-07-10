@@ -129,10 +129,15 @@ func _draw() -> void:
 		Vector2(16, -30 + bob), Vector2(-16, -30 + bob), Vector2(-22, -22 + bob)]),
 		COLOR_HAT_DARK, 1.3)
 	draw_rect(Rect2(-14, -30 + bob, 28, 2.4), COLOR_HAT_DARK, true)
-	var feather_pts: PackedVector2Array = PackedVector2Array([
-		Vector2(-10, -29 + bob), Vector2(-16, -44 + bob), Vector2(-14, -30 + bob),
-		Vector2(-8, -42 + bob), Vector2(-9, -32 + bob)])
-	draw_colored_polygon(feather_pts, COLOR_HAT_FEATHER)
+	var feather_tip: Vector2 = Vector2(-15, -46 + bob)
+	var feather_base1: Vector2 = Vector2(-9, -30 + bob)
+	var feather_base2: Vector2 = Vector2(-16, -31 + bob)
+	var feather_mid: Vector2 = Vector2(-12.5, -38 + bob)
+	var feather_pts_left: PackedVector2Array = PackedVector2Array([
+		feather_base1, feather_mid, feather_tip, feather_base2])
+	draw_colored_polygon(feather_pts_left, COLOR_HAT_FEATHER)
+	draw_line(feather_base1, feather_tip, Color(0.7, 0.4, 0.1, 0.9), 0.9)
+	draw_line(feather_base2, feather_mid, Color(0.7, 0.4, 0.1, 0.9), 0.9)
 	draw_circle(Vector2(-5, -22 + bob), 1.9, COLOR_EYE)
 	draw_circle(Vector2(5, -22 + bob), 1.9, COLOR_EYE)
 	draw_arc(Vector2(0, -17 + bob), 2.8, 0.1, PI - 0.1, 10, COLOR_EYE, 1.3)
