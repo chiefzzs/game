@@ -167,7 +167,25 @@ func _ready() -> void:
 		if _hc.has_signal("died"):
 			_hc.died.connect(func (): _on_ally_died(_hc))
 		_ally_world.add_child(_hc)
-		hud("🤝 队友已加入！🪓樵夫(绿光环近战原场景) + 🏹猎人(蓝光环远程右120px) —— 猎人15米内全敌人射击")
+		var _pc: CharacterBody2D = CharacterBody2D.new()
+		_pc.name = "PriestAlly"
+		_pc.set_script(load("res://scenes/test/PriestNPC.gd"))
+		_pc.collision_layer = 8
+		_pc.collision_mask = 4
+		var _pcs: CollisionShape2D = CollisionShape2D.new()
+		var _prs: RectangleShape2D = RectangleShape2D.new()
+		_prs.size = Vector2(28, 48)
+		_pcs.shape = _prs
+		_pc.add_child(_pcs)
+		var _pdraw: Node2D = Node2D.new()
+		_pdraw.name = "Drawer"
+		_pdraw.set_script(load("res://scenes/test/DrawPriest.gd"))
+		_pc.add_child(_pdraw)
+		_pc.global_position = Vector2(_ax - 120.0, _ay)
+		if _pc.has_signal("died"):
+			_pc.died.connect(func (): _on_ally_died(_pc))
+		_ally_world.add_child(_pc)
+		hud("🤝 队友已加入！🪓樵夫(绿近战) + 🏹猎人(蓝远程右120px) + ⛪牧师(金群疗左120px) —— 牧师2秒/次10格内回10%HP")
 	_flush()
 
 func hud(msg: String) -> void:
